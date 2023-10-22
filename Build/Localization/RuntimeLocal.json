@@ -1,0 +1,12 @@
+{
+    "Started Listening": "Started Listening On : ",
+    "Node Discovery": "Discovering new node: ",
+    "Node Connect": "Connecting + ",
+    "Node Data": "Recieved Data + ",
+    "Node Parse": "Parsing Message + ",
+    "Node HandShake": "Handshaking Node + ",
+    "Node GetPeers": "GetPeers Node + ",
+    "Node Peers": "Sending Peers Node + ",
+    "Node Hello": "Sending Hello",
+    "Node Error": "Sending Error"
+}

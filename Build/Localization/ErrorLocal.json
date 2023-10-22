@@ -1,0 +1,10 @@
+{
+    "Runtime Wrong Message Format": "[Runtime Wrong Message Format] Cannot find the attribute type.",
+    "Runtime Wrong Agent Version": "[Runtime Wrong Agent Version] Cannot communicate with agents other than 0.8.x",
+    "Runtime Peer Construction Address": "[Runtime error peer construction address] Peer Address does not exist",
+    "Runtime Peer Construction Port": "[Runtime Peer Construction Port] Peer port does not exist",
+    "Runtime Peer Discovery": "[Runtime Peer Discovery] Peer Parsing failed.",
+    "Runtime Parse Error": "[Runtime Parse Error] Could not parse the msg. ",
+    "Runtime instance not exists": "[Runtime instace missing] Instance does not exists error.",
+    "Runtime Peer Handshake": "[Runtime Peer Handshake] Node tried to handshake before sending hello."
+}
