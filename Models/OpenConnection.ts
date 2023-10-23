@@ -4,11 +4,18 @@ import RuntimeLocal from '../Localization/RuntimeLocal.json'
 import HelloMsg from '../Messages/Hello.json';
 import ErrorMsg from '../Messages/Error.json'; 
 import GetPeersMsg from '../Messages/GetPeers.json'
+import IHaveObjMsg from '../Messages/IHaveObject.json'
+import GetObjMsg from '../Messages/GetObject.json'
+
+
+import {ApplicationObject} from '../Models/ApplicationObject';
 import { GetLog } from "../Localization/RuntimeLocal";
+import canonicalize from "canonicalize"
 
 
 
 export class OpenConnection {
+    encoding: BufferEncoding = "utf-8";
     port: number;
     host: string;
     socket: net.Socket;
@@ -30,22 +37,47 @@ export class OpenConnection {
         this.isHandshaked = false;
     }
 
+    SendMsg(msg?: string, msgDict?: {}) {
+        if (msgDict !== undefined)
+            this.socket.write(canonicalize(msgDict) + "\n", this.encoding);
+        else if (msg !== undefined)
+            this.socket.write(msg + "\n", this.encoding);
+        else 
+            throw new Error("Cannot send nothing, msg and msgDict are undefined");
+    }
+
     SendHello() {
         console.log(GetLog(RuntimeLocal["Node Hello"]))
-        this.socket.write(JSON.stringify(HelloMsg) + "\n", "utf-8");
+        this.SendMsg(undefined,HelloMsg)
     }
 
     SendError() {
         console.log(GetLog(RuntimeLocal["Node Error"]))
-        this.socket.write(JSON.stringify(ErrorMsg) + "\n", "utf-8");
+        this.SendMsg(undefined, ErrorMsg)
     }
 
-    SendPeers(peers: string) {
-        this.socket.write(peers + "\n", "utf-8")
+    SendPeers(peers: {}) {
+        this.SendMsg(undefined, peers)
     }
 
     SendGetPeers() {
-        this.socket.write(JSON.stringify(GetPeersMsg) + "\n", "utf-8");
+        this.SendMsg(undefined, GetPeersMsg)
+    }
+
+    SendIHaveObject(objectid: string) {
+        var ihaveobj = IHaveObjMsg;
+        ihaveobj.objectid = objectid;
+        this.SendMsg(undefined, ihaveobj);
+    }
+
+    SendGetObject(objectid: string) {
+        var getobj = GetObjMsg;
+        getobj.objectid = objectid;
+        this.SendMsg(undefined, getobj);
+    }
+
+    SendObject(appObj: ApplicationObject) {
+        this.SendMsg(appObj.ToString());
     }
     
     

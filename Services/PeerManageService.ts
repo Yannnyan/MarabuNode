@@ -11,7 +11,7 @@ import { Address } from "../Models/Address";
 export class PeerManager {
     openConnections: OpenConnection[];
     peerList: Address[];
-    peerMsg: any;
+    peerMsg;
 
     constructor(adress: Address) {
         this.openConnections = [];
@@ -56,8 +56,8 @@ export class PeerManager {
         return true;
     }
 
-    GetPeers(): string {
-        return JSON.stringify(this.peerMsg);
+    GetPeers() {
+        return this.peerMsg;
     }
 
     FindPeer(host?: string ,port?: number, socket?: net.Socket) {

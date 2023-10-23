@@ -1,7 +1,7 @@
 import { OpenConnection } from "../Models/OpenConnection";
 import ErrorLocal from '../Localization/ErrorLocal.json';
 import { PeerManager } from "./PeerManageService";
-import { HandShakeStrategy, MsgStrategy, PeersStrategy, GetPeersStrategy } from "../MsgStrategies";
+import { HandShakeStrategy, MsgStrategy, PeersStrategy, GetPeersStrategy, IHaveObjectStrategy, MsgStrategyFactory, ObjectStrategy, GetObjectStrategy } from "../MsgStrategies";
 import { ConnectionManager } from "./ConnectionManageService";
 import RuntimeLocal from '../Localization/RuntimeLocal.json';
 import { GetLog } from "../Localization/RuntimeLocal";
@@ -42,31 +42,19 @@ export class MessageManager {
       }
     
       
-    ParseMessage(msgs: string[], openConnection:OpenConnection): MsgStrategy[] {
+    ParseMessages(msgs: string[], openConnection:OpenConnection): MsgStrategy[] {
         console.log(GetLog(RuntimeLocal["Node Parse"]))
         if(this.connectionManager === undefined)
             throw new Error(ErrorLocal["Runtime instance not exists"])
         var strats:MsgStrategy[] = []
+        var stratFactory = new MsgStrategyFactory(openConnection, this.peerManager, this.connectionManager, msg);
         for(let m of msgs) {
-          var msg = JSON.parse(m);
           var keys: string[] = Object.keys(msg)
+          var msg = JSON.parse(m);
           if (! this.#CheckType(keys)) return [];
           // not handshake and first message
-          if (!openConnection.isHandshaked && ! this.#CheckHandshake(msg, openConnection)) return [];
-          var msgStrat;
-          switch(msg["type"]) {
-            case "hello":
-              openConnection.isHandshaked = true;
-              msgStrat = new HandShakeStrategy(openConnection, this.peerManager, this.connectionManager, msg); 
-              break;
-            case "getPeers":
-              msgStrat = new GetPeersStrategy(openConnection, this.peerManager, this.connectionManager,msg);
-              break;
-            case "peers":
-              msgStrat = new PeersStrategy(openConnection, this.peerManager, this.connectionManager,msg);
-              break;
-          }
-
+          if (!openConnection.isHandshaked && ! this.#CheckHandshake(msg, openConnection)) return [];  
+          var msgStrat = this.ParseMessage(msg, openConnection, stratFactory);
           if(msgStrat === undefined)
           {
             console.log(ErrorLocal["Runtime Parse Error"]);
@@ -76,6 +64,34 @@ export class MessageManager {
             strats.push(msgStrat);
         }
         return strats;
+      }
+
+      ParseMessage(msg: any, openConnection: OpenConnection, stratFactory: MsgStrategyFactory): MsgStrategy | undefined{
+        var msgStrat;
+        switch(msg["type"]) {
+          case "hello":
+            openConnection.isHandshaked = true;
+            msgStrat = stratFactory.CreateStrategy(typeof(HandShakeStrategy));
+            break;
+          case "getPeers":
+            msgStrat = stratFactory.CreateStrategy(typeof(GetPeersStrategy));
+            break;
+          case "peers":
+            msgStrat = stratFactory.CreateStrategy(typeof(PeersStrategy));
+            break;
+          case "ihaveobject":
+              msgStrat = stratFactory.CreateStrategy(typeof(IHaveObjectStrategy));
+              break;
+          case "object":
+              msgStrat = stratFactory.CreateStrategy(typeof(ObjectStrategy));
+              break;
+          case "getobject":
+              msgStrat = stratFactory.CreateStrategy(typeof(GetObjectStrategy));
+              break;
+
+        }
+
+        return msgStrat;
       }
     
       DivideMessage(msg: string): string[] {
@@ -101,7 +117,7 @@ export class MessageManager {
 
       GetMessage(msg: Buffer, peer: OpenConnection) {
         console.log(GetLog(RuntimeLocal["Node Data"]) + msg.toString(this.encoding));
-        var msgStrats = this.ParseMessage(this.DivideMessage(msg.toString(this.encoding)), peer)
+        var msgStrats = this.ParseMessages(this.DivideMessage(msg.toString(this.encoding)), peer)
         msgStrats?.forEach((strat) => strat.HandleMessage());
       }
 }

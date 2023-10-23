@@ -10,6 +10,7 @@ import { GetLog } from "./Localization/RuntimeLocal";
 import TestHardCodedIps from './Discovery/TestHardCodedIPs.json'
 import { ConnectionManager } from "./Services/ConnectionManageService";
 import { MessageManager } from "./Services/MessageManageService";
+import { ApplicationObject } from "./Models/ApplicationObject";
 
 
 
@@ -47,6 +48,12 @@ export class MarabuNode {
         console.log(GetLog(RuntimeLocal["Node Discovery"]) + " " + address.toString())
         this.connectionManager.ConnectToAddress(address);
       }
+    }
+  }
+
+  Gossip(obj: ApplicationObject) {
+    for(let peer of this.peerManager.openConnections) {
+        peer.SendIHaveObject(obj.GetID())
     }
   }
 

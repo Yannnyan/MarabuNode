@@ -45,7 +45,7 @@ class PeerManager {
         return true;
     }
     GetPeers() {
-        return JSON.stringify(this.peerMsg);
+        return this.peerMsg;
     }
     FindPeer(host, port, socket) {
         if ((socket === undefined && (host === undefined || port === undefined))) {

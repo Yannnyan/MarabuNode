@@ -44,6 +44,11 @@ class MarabuNode {
             }
         }
     }
+    Gossip(obj) {
+        for (let peer of this.peerManager.openConnections) {
+            peer.SendIHaveObject(obj.GetID());
+        }
+    }
     Start() {
         return __awaiter(this, void 0, void 0, function* () {
             this.connectionManager.ListenToConnections();

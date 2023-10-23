@@ -25,32 +25,21 @@ class MessageManager {
     SetConnectionManager(connectionManager) {
         this.connectionManager = connectionManager;
     }
-    ParseMessage(msgs, openConnection) {
+    ParseMessages(msgs, openConnection) {
         console.log((0, RuntimeLocal_1.GetLog)(RuntimeLocal_json_1.default["Node Parse"]));
         if (this.connectionManager === undefined)
             throw new Error(ErrorLocal_json_1.default["Runtime instance not exists"]);
         var strats = [];
+        var stratFactory = new MsgStrategies_1.MsgStrategyFactory(openConnection, this.peerManager, this.connectionManager, msg);
         for (let m of msgs) {
-            var msg = JSON.parse(m);
             var keys = Object.keys(msg);
+            var msg = JSON.parse(m);
             if (!__classPrivateFieldGet(this, _MessageManager_instances, "m", _MessageManager_CheckType).call(this, keys))
                 return [];
             // not handshake and first message
             if (!openConnection.isHandshaked && !__classPrivateFieldGet(this, _MessageManager_instances, "m", _MessageManager_CheckHandshake).call(this, msg, openConnection))
                 return [];
-            var msgStrat;
-            switch (msg["type"]) {
-                case "hello":
-                    openConnection.isHandshaked = true;
-                    msgStrat = new MsgStrategies_1.HandShakeStrategy(openConnection, this.peerManager, this.connectionManager, msg);
-                    break;
-                case "getPeers":
-                    msgStrat = new MsgStrategies_1.GetPeersStrategy(openConnection, this.peerManager, this.connectionManager, msg);
-                    break;
-                case "peers":
-                    msgStrat = new MsgStrategies_1.PeersStrategy(openConnection, this.peerManager, this.connectionManager, msg);
-                    break;
-            }
+            var msgStrat = this.ParseMessage(msg, openConnection, stratFactory);
             if (msgStrat === undefined) {
                 console.log(ErrorLocal_json_1.default["Runtime Parse Error"]);
                 return [];
@@ -59,6 +48,31 @@ class MessageManager {
                 strats.push(msgStrat);
         }
         return strats;
+    }
+    ParseMessage(msg, openConnection, stratFactory) {
+        var msgStrat;
+        switch (msg["type"]) {
+            case "hello":
+                openConnection.isHandshaked = true;
+                msgStrat = stratFactory.CreateStrategy(typeof (MsgStrategies_1.HandShakeStrategy));
+                break;
+            case "getPeers":
+                msgStrat = stratFactory.CreateStrategy(typeof (MsgStrategies_1.GetPeersStrategy));
+                break;
+            case "peers":
+                msgStrat = stratFactory.CreateStrategy(typeof (MsgStrategies_1.PeersStrategy));
+                break;
+            case "ihaveobject":
+                msgStrat = stratFactory.CreateStrategy(typeof (MsgStrategies_1.IHaveObjectStrategy));
+                break;
+            case "object":
+                msgStrat = stratFactory.CreateStrategy(typeof (MsgStrategies_1.ObjectStrategy));
+                break;
+            case "getobject":
+                msgStrat = stratFactory.CreateStrategy(typeof (MsgStrategies_1.GetObjectStrategy));
+                break;
+        }
+        return msgStrat;
     }
     DivideMessage(msg) {
         var msgs = msg.split("\n");
@@ -81,7 +95,7 @@ class MessageManager {
     }
     GetMessage(msg, peer) {
         console.log((0, RuntimeLocal_1.GetLog)(RuntimeLocal_json_1.default["Node Data"]) + msg.toString(this.encoding));
-        var msgStrats = this.ParseMessage(this.DivideMessage(msg.toString(this.encoding)), peer);
+        var msgStrats = this.ParseMessages(this.DivideMessage(msg.toString(this.encoding)), peer);
         msgStrats === null || msgStrats === void 0 ? void 0 : msgStrats.forEach((strat) => strat.HandleMessage());
     }
 }

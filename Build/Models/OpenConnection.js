@@ -9,9 +9,13 @@ const RuntimeLocal_json_1 = __importDefault(require("../Localization/RuntimeLoca
 const Hello_json_1 = __importDefault(require("../Messages/Hello.json"));
 const Error_json_1 = __importDefault(require("../Messages/Error.json"));
 const GetPeers_json_1 = __importDefault(require("../Messages/GetPeers.json"));
+const IHaveObject_json_1 = __importDefault(require("../Messages/IHaveObject.json"));
+const GetObject_json_1 = __importDefault(require("../Messages/GetObject.json"));
 const RuntimeLocal_1 = require("../Localization/RuntimeLocal");
+const canonicalize_1 = __importDefault(require("canonicalize"));
 class OpenConnection {
     constructor(socket, isClient) {
+        this.encoding = "utf-8";
         if (socket.remoteAddress === undefined) {
             throw new Error(ErrorLocal_json_1.default["Runtime Peer Construction Address"]);
         }
@@ -24,19 +28,40 @@ class OpenConnection {
         this.isClient = isClient;
         this.isHandshaked = false;
     }
+    SendMsg(msg, msgDict) {
+        if (msgDict !== undefined)
+            this.socket.write((0, canonicalize_1.default)(msgDict) + "\n", this.encoding);
+        else if (msg !== undefined)
+            this.socket.write(msg + "\n", this.encoding);
+        else
+            throw new Error("Cannot send nothing, msg and msgDict are undefined");
+    }
     SendHello() {
         console.log((0, RuntimeLocal_1.GetLog)(RuntimeLocal_json_1.default["Node Hello"]));
-        this.socket.write(JSON.stringify(Hello_json_1.default) + "\n", "utf-8");
+        this.SendMsg(undefined, Hello_json_1.default);
     }
     SendError() {
         console.log((0, RuntimeLocal_1.GetLog)(RuntimeLocal_json_1.default["Node Error"]));
-        this.socket.write(JSON.stringify(Error_json_1.default) + "\n", "utf-8");
+        this.SendMsg(undefined, Error_json_1.default);
     }
     SendPeers(peers) {
-        this.socket.write(peers + "\n", "utf-8");
+        this.SendMsg(undefined, peers);
     }
     SendGetPeers() {
-        this.socket.write(JSON.stringify(GetPeers_json_1.default) + "\n", "utf-8");
+        this.SendMsg(undefined, GetPeers_json_1.default);
+    }
+    SendIHaveObject(objectid) {
+        var ihaveobj = IHaveObject_json_1.default;
+        ihaveobj.objectid = objectid;
+        this.SendMsg(undefined, ihaveobj);
+    }
+    SendGetObject(objectid) {
+        var getobj = GetObject_json_1.default;
+        getobj.objectid = objectid;
+        this.SendMsg(undefined, getobj);
+    }
+    SendObject(appObj) {
+        this.SendMsg(appObj.ToString());
     }
 }
 exports.OpenConnection = OpenConnection;

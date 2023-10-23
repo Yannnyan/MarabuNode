@@ -5,6 +5,42 @@ import RuntimeLocal from './Localization/RuntimeLocal.json'
 import { GetLog } from './Localization/RuntimeLocal';
 import { ConnectionManager } from './Services/ConnectionManageService';
 import { Address } from './Models/Address';
+import { ApplicationObject } from './Models/ApplicationObject';
+
+
+export class MsgStrategyFactory {
+    peer: OpenConnection;
+    peerManager: PeerManager;
+    connectionManager: ConnectionManager;
+    valid_peer_version?: boolean;
+    msg: any;
+
+    constructor(peer: OpenConnection, peerManager: PeerManager, connectionManager: ConnectionManager, msg:any) {
+        this.peer = peer;
+        this.peerManager = peerManager;
+        this.connectionManager = connectionManager;
+        this.msg = msg;
+    }
+
+    CreateStrategy(strategy_type: string): MsgStrategy {
+        switch(strategy_type){
+            case typeof(HandShakeStrategy):                
+                return new HandShakeStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof(PeersStrategy):
+                return new PeersStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof(ObjectStrategy):
+                return new ObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof(GetPeersStrategy):
+                return new GetPeersStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof(IHaveObjectStrategy):
+                return new IHaveObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof(GetObjectStrategy):
+                return new GetObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            default:
+                throw new Error("Cannot parse the strategy type. " + strategy_type);
+        }
+    }
+}
 
 
 export abstract class MsgStrategy {
@@ -101,5 +137,37 @@ export class PeersStrategy extends MsgStrategy {
     }
     
 }
+
+
+export class IHaveObjectStrategy extends MsgStrategy {
+    HandleMessage(): void {
+        var objectid = this.msg["objectid"]
+        var strat = this;
+        ApplicationObject.FindById(objectid).then(function(obj) {
+            if(obj !== undefined) {
+                return;
+            }
+            else
+                strat.peer.SendGetObject(objectid);
+        })
+    }
+
+}
+
+export class ObjectStrategy extends MsgStrategy {
+    HandleMessage(): void {
+        
+        throw new Error('Method not implemented.');
+    }
+    
+}
+
+export class GetObjectStrategy extends MsgStrategy {
+    HandleMessage(): void {
+        throw new Error('Method not implemented.');
+    }
+    
+}
+
 
 

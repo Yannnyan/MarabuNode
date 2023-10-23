@@ -3,11 +3,39 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PeersStrategy = exports.GetPeersStrategy = exports.HandShakeStrategy = exports.MsgStrategy = void 0;
+exports.GetObjectStrategy = exports.ObjectStrategy = exports.IHaveObjectStrategy = exports.PeersStrategy = exports.GetPeersStrategy = exports.HandShakeStrategy = exports.MsgStrategy = exports.MsgStrategyFactory = void 0;
 const ErrorLocal_json_1 = __importDefault(require("./Localization/ErrorLocal.json"));
 const RuntimeLocal_json_1 = __importDefault(require("./Localization/RuntimeLocal.json"));
 const RuntimeLocal_1 = require("./Localization/RuntimeLocal");
 const Address_1 = require("./Models/Address");
+const ApplicationObject_1 = require("./Models/ApplicationObject");
+class MsgStrategyFactory {
+    constructor(peer, peerManager, connectionManager, msg) {
+        this.peer = peer;
+        this.peerManager = peerManager;
+        this.connectionManager = connectionManager;
+        this.msg = msg;
+    }
+    CreateStrategy(strategy_type) {
+        switch (strategy_type) {
+            case typeof (HandShakeStrategy):
+                return new HandShakeStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof (PeersStrategy):
+                return new PeersStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof (ObjectStrategy):
+                return new ObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof (GetPeersStrategy):
+                return new GetPeersStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof (IHaveObjectStrategy):
+                return new IHaveObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case typeof (GetObjectStrategy):
+                return new GetObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            default:
+                throw new Error("Cannot parse the strategy type. " + strategy_type);
+        }
+    }
+}
+exports.MsgStrategyFactory = MsgStrategyFactory;
 class MsgStrategy {
     constructor(peer, peerManager, connectionManager, msg) {
         this.peer = peer;
@@ -86,3 +114,29 @@ class PeersStrategy extends MsgStrategy {
     }
 }
 exports.PeersStrategy = PeersStrategy;
+class IHaveObjectStrategy extends MsgStrategy {
+    HandleMessage() {
+        var objectid = this.msg["objectid"];
+        var strat = this;
+        ApplicationObject_1.ApplicationObject.FindById(objectid).then(function (obj) {
+            if (obj !== undefined) {
+                return;
+            }
+            else
+                strat.peer.SendGetObject(objectid);
+        });
+    }
+}
+exports.IHaveObjectStrategy = IHaveObjectStrategy;
+class ObjectStrategy extends MsgStrategy {
+    HandleMessage() {
+        throw new Error('Method not implemented.');
+    }
+}
+exports.ObjectStrategy = ObjectStrategy;
+class GetObjectStrategy extends MsgStrategy {
+    HandleMessage() {
+        throw new Error('Method not implemented.');
+    }
+}
+exports.GetObjectStrategy = GetObjectStrategy;
