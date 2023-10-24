@@ -8,7 +8,9 @@ import { OpenConnection } from "../Models/OpenConnection";
 import * as net from 'net'
 import { MsgStrategy } from "../MsgStrategies";
 
-var peerManager = new PeerManager()
+let address = new Address( "localhost",18019);
+
+var peerManager = new PeerManager(address)
 var messageManager = new MessageManager(peerManager);
 var connectionManager = new ConnectionManager(peerManager,messageManager, "localhost",18019);
 messageManager.SetConnectionManager(connectionManager);
@@ -19,7 +21,7 @@ var socket = new net.Socket()
 socket.connect({port: 18018, host: "localhost"}, function() {
     var peer = new OpenConnection(socket,true);
     var msgs: string[] = [JSON.stringify(HelloMsg), JSON.stringify(GetPeerMsg)]
-    var parsed = messageManager.ParseMessage(msgs, peer);
+    var parsed = messageManager.ParseMessages(msgs, peer);
     if(parsed === undefined){
         return;
     }

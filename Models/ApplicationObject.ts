@@ -12,13 +12,14 @@ const ObjModel = mongoose.model("ApplicationObject");
 export class ApplicationObject {
     type: string;
     object: Block | Transaction;
+    id?: string;
 
     constructor(object: Block | Transaction) {
         this.type = typeof (object);
         this.object = object;
     }
 
-    ParseObject(msg: any): ApplicationObject {
+    static Parse(msg: any): ApplicationObject {
         var keys = Object.keys(msg);
         if(keys.indexOf("object") === -1)
             throw new Error("cannot parse object, it doesnt contain a keys key");
@@ -48,8 +49,11 @@ export class ApplicationObject {
     }
 
     GetID() {
-        var enc = new TextEncoder();
-        return Buffer.from(sha256(enc.encode(canonicalize(this.ToDict())))).toString("hex");
+        if (this.id === undefined){
+            var enc = new TextEncoder();
+            this.id = Buffer.from(sha256(enc.encode(canonicalize(this.ToDict())))).toString("hex");    
+        }
+        return this.id;
     }
 
     ToString() {
@@ -62,7 +66,10 @@ export class ApplicationObject {
     }
     
     static async FindById(id: String) {
-        return ObjModel.findOne({"objectid": id});
+        var obj = await ObjModel.findOne({"objectid": id})
+        if(obj === undefined)
+            return obj;
+        return ApplicationObject.Parse(obj);
     }
 }
 

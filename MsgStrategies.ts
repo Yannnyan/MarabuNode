@@ -6,6 +6,8 @@ import { GetLog } from './Localization/RuntimeLocal';
 import { ConnectionManager } from './Services/ConnectionManageService';
 import { Address } from './Models/Address';
 import { ApplicationObject } from './Models/ApplicationObject';
+import GetObjMsg from './Messages/GetObject.json'
+
 
 
 export class MsgStrategyFactory {
@@ -91,6 +93,17 @@ export abstract class MsgStrategy {
       return [];
     }
   }
+
+  CheckValidMsg(msgType: any, msg: any) {
+    var msgTypeKeys = Object.keys(msgType)
+    var msgKeys = Object.keys(msg);
+    if(msgKeys.every((key) => msgTypeKeys.includes(key)) && msgTypeKeys.every((key) => msgKeys.includes(key))){
+        console.log(ErrorLocal['Runtime Wrong Message Format'])
+        return true;
+    }
+    return false;
+  }
+
     abstract HandleMessage(): void;
   }
   
@@ -156,14 +169,24 @@ export class IHaveObjectStrategy extends MsgStrategy {
 
 export class ObjectStrategy extends MsgStrategy {
     HandleMessage(): void {
-        
-        throw new Error('Method not implemented.');
+        let obj = ApplicationObject.Parse(this.msg);
+        // validify object dont forget
+        ApplicationObject.FindById(obj.GetID()).then((found) => {
+            if (found === undefined) {
+                obj.Save()
+            }
+        })
     }
     
 }
 
 export class GetObjectStrategy extends MsgStrategy {
     HandleMessage(): void {
+        this.CheckValidMsg(GetObjMsg, this.msg);
+        var peer = this.peer;
+        ApplicationObject.FindById(this.msg["objectid"]).then(function(obj) {
+            peer.SendObject(obj)
+        }) 
         throw new Error('Method not implemented.');
     }
     
