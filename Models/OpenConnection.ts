@@ -1,17 +1,24 @@
 import * as net from "net";
-import ErrorLocal from '../Localization/ErrorLocal.json';
-import RuntimeLocal from '../Localization/RuntimeLocal.json'
-import HelloMsg from '../Messages/Hello.json';
-import ErrorMsg from '../Messages/Error.json'; 
-import GetPeersMsg from '../Messages/GetPeers.json'
-import IHaveObjMsg from '../Messages/IHaveObject.json'
-import GetObjMsg from '../Messages/GetObject.json'
+import ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };
+;
+import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
+
+import HelloMsg from '../Messages/Hello.json' assert { type: "json" };
+;
+import ErrorMsg from '../Messages/Error.json' assert { type: "json" };
+; 
+import GetPeersMsg from '../Messages/GetPeers.json' assert { type: "json" };
+
+import IHaveObjMsg from '../Messages/IHaveObject.json' assert { type: "json" };
+
+import GetObjMsg from '../Messages/GetObject.json' assert { type: "json" };
 
 
-import {ApplicationObject} from '../Models/ApplicationObject';
-import { GetLog } from "../Localization/RuntimeLocal";
-import canonicalize from "canonicalize"
 
+import {ApplicationObject} from '../Models/ApplicationObject.js';
+import { GetLog } from "../Localization/RuntimeLocal.js";
+
+var canonicalize = JSON.stringify
 
 
 export class OpenConnection {
@@ -56,7 +63,7 @@ export class OpenConnection {
         this.SendMsg(undefined, ErrorMsg)
     }
 
-    SendPeers(peers: {}) {
+    SendPeers(peers: any) {
         this.SendMsg(undefined, peers)
     }
 

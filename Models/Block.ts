@@ -10,6 +10,7 @@ var blockDict = {"type": String,
 "note": String}
 
 export class Block {
+    type= "block"
     txids: string[];
     nonce: string;
     previd: string;
@@ -44,6 +45,11 @@ export class Block {
         return new Block(obj["txids"], obj["nonce"], obj["previd"], obj["created"], 
                                         obj["T"], obj["miner"], obj["note"])
     }
+
+    async Verify(msgID: string): Promise<boolean> {
+        throw new Error("Not implemented");
+    }
+
     ToDict() {
         return {
             "type": "Block",

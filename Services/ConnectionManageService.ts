@@ -1,10 +1,11 @@
-import { PeerManager } from "./PeerManageService";
-import { Address } from "../Models/Address";
-import { OpenConnection } from "../Models/OpenConnection";
+import { PeerManager } from "./PeerManageService.js";
+import { Address } from "../Models/Address.js";
+import { OpenConnection } from "../Models/OpenConnection.js";
 import * as net from 'net';
-import { MessageManager } from "./MessageManageService";
-import {GetLog} from '../Localization/RuntimeLocal'
-import RuntimeLocal from '../Localization/RuntimeLocal.json'
+import { MessageManager } from "./MessageManageService.js";
+import {GetLog} from '../Localization/RuntimeLocal.js'
+import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
+
 
 export class ConnectionManager {
     peerManager: PeerManager;

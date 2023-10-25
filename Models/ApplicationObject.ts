@@ -1,8 +1,13 @@
-import { Transaction } from "./Transaction";
-import { Block } from "./Block";
-import sha256, {Hash, HMAC} from "fast-sha256"
-import canonicalize from "canonicalize"
+import { Transaction } from "./Transaction.js";
+import { Block } from "./Block.js";
+import Sha256, {Hash, HMAC} from "fast-sha256"
 import mongoose from "mongoose";
+import serialize from "canonicalize"
+
+
+var sha256 = Sha256.hash
+var canonicalize = serialize
+
 
 // const BlockModel = mongoose.model("Block");
 // const TxModel = mongoose.model("Transaction");
@@ -22,7 +27,7 @@ export class ApplicationObject {
     static Parse(msg: any): ApplicationObject {
         var keys = Object.keys(msg);
         if(keys.indexOf("object") === -1)
-            throw new Error("cannot parse object, it doesnt contain a keys key");
+            throw new Error("cannot parse object, it doesnt contain an object key " + JSON.stringify(msg) );
         var obj = msg["object"]
         var objKeys = Object.keys(obj);
         if (objKeys.indexOf("type") === -1){
@@ -41,6 +46,10 @@ export class ApplicationObject {
         }
     }
 
+    async Verify() {
+        await this.object.Verify(this.GetID());
+    }
+
     ToDict() {
         return {
             "type" : "object",
@@ -51,7 +60,8 @@ export class ApplicationObject {
     GetID() {
         if (this.id === undefined){
             var enc = new TextEncoder();
-            this.id = Buffer.from(sha256(enc.encode(canonicalize(this.ToDict())))).toString("hex");    
+            var uint8 = Buffer.from(canonicalize(this.object.ToDict()));
+            this.id = Buffer.from(sha256(uint8)).toString("hex");    
         }
         return this.id;
     }
@@ -60,16 +70,20 @@ export class ApplicationObject {
         return canonicalize(this.ToDict())
     }
 
+
     async Save() {
         var obj = this.ToDict();
-        await ObjModel.create({"object": obj.object, "objectid": this.GetID()})
+        if(!await ApplicationObject.FindById(this.GetID())) {
+            return await ObjModel.create({"object": obj.object, "objectid": this.GetID()})
+        }
+        return undefined;
     }
     
     static async FindById(id: String) {
-        var obj = await ObjModel.findOne({"objectid": id})
-        if(obj === undefined)
+        var obj = (await ObjModel.findOne({"objectid": id}))
+        if(!obj)
             return obj;
-        return ApplicationObject.Parse(obj);
+        return ApplicationObject.Parse(obj._doc);
     }
 }
 

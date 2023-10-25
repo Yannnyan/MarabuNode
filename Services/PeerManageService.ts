@@ -1,11 +1,14 @@
 import { Socket } from "dgram";
 import * as net from "net";
-import KnownPeers from '../Discovery/KnownPeers.json'
-import * as ErrorLocal from '../Localization/ErrorLocal.json'
+import KnownPeers from '../Discovery/KnownPeers.json' assert { type: "json" };
+
+import * as ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };
+
 import * as fs from "fs"
-import PeersMsg from '../Messages/Peers.json'
-import {OpenConnection} from '../Models/OpenConnection';
-import { Address } from "../Models/Address";
+import PeersMsg from '../Messages/Peers.json' assert { type: "json" };
+
+import {OpenConnection} from '../Models/OpenConnection.js';
+import { Address } from "../Models/Address.js";
 
 
 export class PeerManager {

@@ -1,12 +1,15 @@
-import { OpenConnection } from './Models/OpenConnection';
-import { PeerManager } from './Services/PeerManageService';
-import ErrorLocal from './Localization/ErrorLocal.json'
-import RuntimeLocal from './Localization/RuntimeLocal.json'
-import { GetLog } from './Localization/RuntimeLocal';
-import { ConnectionManager } from './Services/ConnectionManageService';
-import { Address } from './Models/Address';
-import { ApplicationObject } from './Models/ApplicationObject';
-import GetObjMsg from './Messages/GetObject.json'
+import { OpenConnection } from './Models/OpenConnection.js';
+import { PeerManager } from './Services/PeerManageService.js';
+import ErrorLocal from './Localization/ErrorLocal.json' assert { type: "json" };
+
+import RuntimeLocal from './Localization/RuntimeLocal.json' assert { type: "json" };
+
+import { GetLog } from './Localization/RuntimeLocal.js';
+import { ConnectionManager } from './Services/ConnectionManageService.js';
+import { Address } from './Models/Address.js';
+import { ApplicationObject } from './Models/ApplicationObject.js';
+import GetObjMsg from './Messages/GetObject.json' assert { type: "json" };
+
 
 
 
@@ -26,21 +29,29 @@ export class MsgStrategyFactory {
 
     CreateStrategy(strategy_type: string): MsgStrategy {
         switch(strategy_type){
-            case typeof(HandShakeStrategy):                
+            case HandShakeStrategy.name:                
                 return new HandShakeStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
-            case typeof(PeersStrategy):
+            case PeersStrategy.name:
                 return new PeersStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
-            case typeof(ObjectStrategy):
+            case ObjectStrategy.name:
                 return new ObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
-            case typeof(GetPeersStrategy):
+            case GetPeersStrategy.name:
                 return new GetPeersStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
-            case typeof(IHaveObjectStrategy):
+            case IHaveObjectStrategy.name:
                 return new IHaveObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
-            case typeof(GetObjectStrategy):
+            case GetObjectStrategy.name:
                 return new GetObjectStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case ErrorStrategy.name:
+                return new ErrorStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
+            case UnknownMsgStrategy.name:
+                return new UnknownMsgStrategy(this.peer, this.peerManager, this.connectionManager, this.msg);
             default:
                 throw new Error("Cannot parse the strategy type. " + strategy_type);
         }
+    }
+
+    SetMsg(msg:any) {
+        this.msg = msg;
     }
 }
 
@@ -168,16 +179,30 @@ export class IHaveObjectStrategy extends MsgStrategy {
 }
 
 export class ObjectStrategy extends MsgStrategy {
+    Gossip(obj: ApplicationObject) {
+        for(let peer of this.peerManager.openConnections) {
+            peer.SendIHaveObject(obj.GetID())
+        }
+    }
+
     HandleMessage(): void {
         let obj = ApplicationObject.Parse(this.msg);
         // validify object dont forget
         ApplicationObject.FindById(obj.GetID()).then((found) => {
             if (found === undefined) {
-                obj.Save()
+                try{
+                    obj.Verify();
+                }
+                catch(err) {
+                    console.log(err);
+                    this.peer.SendError();
+                    return;
+                }
+                obj.Save();
+                this.Gossip(obj);
             }
         })
     }
-    
 }
 
 export class GetObjectStrategy extends MsgStrategy {
@@ -186,7 +211,22 @@ export class GetObjectStrategy extends MsgStrategy {
         var peer = this.peer;
         ApplicationObject.FindById(this.msg["objectid"]).then(function(obj) {
             peer.SendObject(obj)
-        }) 
+        })
+    }
+    
+}
+
+
+export class ErrorStrategy extends MsgStrategy {
+    HandleMessage(): void {
+        throw new Error('Got Error From user.');
+    }
+
+}
+
+
+export class UnknownMsgStrategy extends MsgStrategy {
+    HandleMessage(): void {
         throw new Error('Method not implemented.');
     }
     

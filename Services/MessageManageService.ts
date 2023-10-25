@@ -1,10 +1,11 @@
-import { OpenConnection } from "../Models/OpenConnection";
-import ErrorLocal from '../Localization/ErrorLocal.json';
-import { PeerManager } from "./PeerManageService";
-import { HandShakeStrategy, MsgStrategy, PeersStrategy, GetPeersStrategy, IHaveObjectStrategy, MsgStrategyFactory, ObjectStrategy, GetObjectStrategy } from "../MsgStrategies";
-import { ConnectionManager } from "./ConnectionManageService";
-import RuntimeLocal from '../Localization/RuntimeLocal.json';
-import { GetLog } from "../Localization/RuntimeLocal";
+import { OpenConnection } from "../Models/OpenConnection.js";
+import ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };;
+import { PeerManager } from "./PeerManageService.js";
+import { HandShakeStrategy, MsgStrategy, PeersStrategy, GetPeersStrategy, IHaveObjectStrategy, MsgStrategyFactory, ObjectStrategy, GetObjectStrategy, ErrorStrategy, UnknownMsgStrategy } from "../MsgStrategies.js";
+import { ConnectionManager } from "./ConnectionManageService.js";
+import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
+;
+import { GetLog } from "../Localization/RuntimeLocal.js";
 
 export class MessageManager {
     peerManager: PeerManager;
@@ -49,15 +50,16 @@ export class MessageManager {
         var strats:MsgStrategy[] = []
         var stratFactory = new MsgStrategyFactory(openConnection, this.peerManager, this.connectionManager, msg);
         for(let m of msgs) {
-          var keys: string[] = Object.keys(msg)
           var msg = JSON.parse(m);
+          stratFactory.SetMsg(msg);
+          var keys: string[] = Object.keys(msg)
           if (! this.#CheckType(keys)) return [];
           // not handshake and first message
           if (!openConnection.isHandshaked && ! this.#CheckHandshake(msg, openConnection)) return [];  
           var msgStrat = this.ParseMessage(msg, openConnection, stratFactory);
           if(msgStrat === undefined)
           {
-            console.log(ErrorLocal["Runtime Parse Error"]);
+            console.log(ErrorLocal["Runtime Parse Error"] + JSON.stringify(msg));
             return [];
           }
           else
@@ -68,27 +70,32 @@ export class MessageManager {
 
       ParseMessage(msg: any, openConnection: OpenConnection, stratFactory: MsgStrategyFactory): MsgStrategy | undefined{
         var msgStrat;
-        switch(msg["type"]) {
+        switch(msg["type"]) 
+        {
           case "hello":
             openConnection.isHandshaked = true;
-            msgStrat = stratFactory.CreateStrategy(typeof(HandShakeStrategy));
+            msgStrat = stratFactory.CreateStrategy(HandShakeStrategy.name);
             break;
-          case "getPeers":
-            msgStrat = stratFactory.CreateStrategy(typeof(GetPeersStrategy));
+          case "getpeers":
+            msgStrat = stratFactory.CreateStrategy(GetPeersStrategy.name);
             break;
           case "peers":
-            msgStrat = stratFactory.CreateStrategy(typeof(PeersStrategy));
+            msgStrat = stratFactory.CreateStrategy(PeersStrategy.name);
             break;
           case "ihaveobject":
-              msgStrat = stratFactory.CreateStrategy(typeof(IHaveObjectStrategy));
+              msgStrat = stratFactory.CreateStrategy(IHaveObjectStrategy.name);
               break;
           case "object":
-              msgStrat = stratFactory.CreateStrategy(typeof(ObjectStrategy));
+              msgStrat = stratFactory.CreateStrategy(ObjectStrategy.name);
               break;
           case "getobject":
-              msgStrat = stratFactory.CreateStrategy(typeof(GetObjectStrategy));
+              msgStrat = stratFactory.CreateStrategy(GetObjectStrategy.name);
               break;
-
+          case "error":
+              msgStrat = stratFactory.CreateStrategy(ErrorStrategy.name);
+              break;
+          default:
+            msgStrat = stratFactory.CreateStrategy(UnknownMsgStrategy.name);
         }
 
         return msgStrat;
