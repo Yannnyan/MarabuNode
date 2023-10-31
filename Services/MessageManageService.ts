@@ -1,28 +1,38 @@
 import { OpenConnection } from "../Models/OpenConnection.js";
 import ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };;
 import { PeerManager } from "./PeerManageService.js";
-import { HandShakeStrategy, MsgStrategy, PeersStrategy, GetPeersStrategy, IHaveObjectStrategy, MsgStrategyFactory, ObjectStrategy, GetObjectStrategy, ErrorStrategy, UnknownMsgStrategy } from "../MsgStrategies.js";
 import { ConnectionManager } from "./ConnectionManageService.js";
 import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
-;
+import {autoInjectable, injectable} from "tsyringe";
 import { GetLog } from "../Localization/RuntimeLocal.js";
+import { IMessageProvider } from "../API/Services/IMessageProvider.js";
+import { IPeerProvider } from "../API/Services/IPeerProvider.js";
+import { IConnectionProvider } from "../API/Services/IConnectionProvider.js";
+import { HandShakeStrategy } from "../Strategies/MsgStrategies/HandShakeStrategy.js";
+import { GetPeersStrategy } from "../Strategies/MsgStrategies/GetPeersStrategy.js";
+import { ErrorStrategy } from "../Strategies/MsgStrategies/ErrorStrategy.js";
+import { GetObjectStrategy } from "../Strategies/MsgStrategies/GetObjectStrategy.js";
+import { IHaveObjectStrategy } from "../Strategies/MsgStrategies/IHaveObjectStrategy.js";
+import { MsgStrategy } from "../Strategies/MsgStrategies/MsgStrategy.js";
+import { MsgStrategyFactory } from "../Strategies/MsgStrategies/MsgStrategyFactory.js";
+import { ObjectStrategy } from "../Strategies/MsgStrategies/ObjectStrategy.js";
+import { PeersStrategy } from "../Strategies/MsgStrategies/PeersStrategy.js";
+import { UnknownMsgStrategy } from "../Strategies/MsgStrategies/UnknownMsgStrategy.js";
 
-export class MessageManager {
-    peerManager: PeerManager;
-    connectionManager?: ConnectionManager;
+
+
+@injectable()
+export class MessageManager implements IMessageProvider{
+    peerProvider: IPeerProvider;
     last_message: string;
     encoding: BufferEncoding;
 
-    constructor(peerManager: PeerManager, connectionManager?: ConnectionManager){
-        this.peerManager = peerManager;
+    constructor(peerProivder: IPeerProvider){
+        this.peerProvider = peerProivder;
         this.last_message = "";
-        this.connectionManager = connectionManager;
         this.encoding = "utf-8";
     }
 
-    SetConnectionManager(connectionManager: ConnectionManager) {
-        this.connectionManager = connectionManager;
-    }
     #CheckType(keys: string[]) {
         var type = keys.find((some:string) => some === "type");
         if(type === undefined){
@@ -33,7 +43,7 @@ export class MessageManager {
         }
     
       #CheckHandshake(msg: any, peer:OpenConnection) {
-        if (msg["type"] !== "hello" && this.peerManager.FindPeer(peer.host, peer.port) === undefined){
+        if (msg["type"] !== "hello" && this.peerProvider.FindPeer(peer.host, peer.port) === undefined){
           peer.SendError();
           console.log(GetLog(ErrorLocal["Runtime Peer Handshake"]))
           peer.socket.destroy();
@@ -45,11 +55,10 @@ export class MessageManager {
       
     ParseMessages(msgs: string[], openConnection:OpenConnection): MsgStrategy[] {
         console.log(GetLog(RuntimeLocal["Node Parse"]))
-        if(this.connectionManager === undefined)
-            throw new Error(ErrorLocal["Runtime instance not exists"])
         var strats:MsgStrategy[] = []
-        var stratFactory = new MsgStrategyFactory(openConnection, this.peerManager, this.connectionManager, msg);
+        var stratFactory = new MsgStrategyFactory(openConnection, msg);
         for(let m of msgs) {
+          console.log(m)
           var msg = JSON.parse(m);
           stratFactory.SetMsg(msg);
           var keys: string[] = Object.keys(msg)

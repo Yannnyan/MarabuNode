@@ -9,9 +9,11 @@ import PeersMsg from '../Messages/Peers.json' assert { type: "json" };
 
 import {OpenConnection} from '../Models/OpenConnection.js';
 import { Address } from "../Models/Address.js";
+import {autoInjectable} from "tsyringe"
+import { IPeerProvider } from "../API/Services/IPeerProvider.js";
 
-
-export class PeerManager {
+@autoInjectable()
+export class PeerManager implements IPeerProvider {
     openConnections: OpenConnection[];
     peerList: Address[];
     peerMsg;
@@ -20,6 +22,9 @@ export class PeerManager {
         this.openConnections = [];
         this.peerList = [adress];
         this.peerMsg = {"type": PeersMsg.type, "peers": PeersMsg.peers};
+    }
+    GetOpenConnections(): OpenConnection[] {
+        return this.openConnections;
     }
 
     #UpdatePeers() {
@@ -78,8 +83,6 @@ export class PeerManager {
             }
             return this.peerList.find((peer) => peer.port === socket.remotePort && peer.host === socket.remoteAddress)
         }
-        
-        
     }
 }
 

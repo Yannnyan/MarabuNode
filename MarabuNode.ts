@@ -1,41 +1,36 @@
 import * as net from "net";
 // import { StringDecoder } from "string_decoder";
 
-import {PeerManager} from './Services/PeerManageService.js';
 import { OpenConnection } from "./Models/OpenConnection.js";
 import { Address } from "./Models/Address.js";
-import ErrorLocal from "./Localization/ErrorLocal.json" assert { type: "json" };
-
 import RuntimeLocal from "./Localization/RuntimeLocal.json" assert { type: "json" };
-
 import { GetLog } from "./Localization/RuntimeLocal.js";
 import TestHardCodedIps from './Discovery/TestHardCodedIPs.json' assert { type: "json" };
-
-import { ConnectionManager } from "./Services/ConnectionManageService.js";
-import { MessageManager } from "./Services/MessageManageService.js";
 import { ApplicationObject } from "./Models/ApplicationObject.js";
+import {container,autoInjectable} from "tsyringe"
+import { IDBConnectionProvider } from "./API/Services/IDBConnectionProvider.js";
+import { IConnectionProvider } from "./API/Services/IConnectionProvider.js";
+import { IMessageProvider } from "./API/Services/IMessageProvider.js";
+import { IPeerProvider } from "./API/Services/IPeerProvider.js";
 
 
-
-interface GenericMsg {
-  type: string
-}
-
-
+@autoInjectable()
 export class MarabuNode {
-    peerManager: PeerManager;
-    connectionManager: ConnectionManager;
-    messageManager: MessageManager;
+    peerProvider: IPeerProvider;
+    conProvider: IConnectionProvider;
+    msgProvider: IMessageProvider;
+    dbConProvider: IDBConnectionProvider;
     port: number;
     host: string;
 
-  constructor(port?: number, host?: string) {
+  constructor(msgManager: IMessageProvider, connectionManager: IConnectionProvider, peerManager: IPeerProvider,
+                dbConProvider: IDBConnectionProvider,port?: number, host?: string, ) {
     this.port = port || 18018;
     this.host = host || '127.0.0.1';
-    this.peerManager = new PeerManager(new Address(this.host,this.port));
-    this.messageManager = new MessageManager(this.peerManager);
-    this.connectionManager = new ConnectionManager(this.peerManager, this.messageManager, this.host, this.port);
-    this.messageManager.SetConnectionManager(this.connectionManager);
+    this.peerProvider = peerManager;
+    this.msgProvider = msgManager;
+    this.conProvider = connectionManager
+    this.dbConProvider = dbConProvider;
   }
   
 
@@ -47,17 +42,20 @@ export class MarabuNode {
       if(address.host === this.host && address.port === this.port){
         continue;
       }
-      if(this.peerManager.FindPeer(address.host, address.port) === undefined) {
+      if(this.peerProvider.FindPeer(address.host, address.port) === undefined) {
         console.log(GetLog(RuntimeLocal["Node Discovery"]) + " " + address.toString())
-        this.connectionManager.ConnectToAddress(address);
+        this.conProvider.ConnectToAddress(address);
       }
     }
   }
 
+  GossipNewTransaction(obj: ApplicationObject, senderPeer: OpenConnection) {
+    this.msgProvider.GetMessage(Buffer.from(obj.ToString() + '\n' , "utf-8"), senderPeer);
+  }
   
 
   async Start(){
-    this.connectionManager.ListenToConnections();
+    this.conProvider.ListenToConnections();
     this.BootstrapDiscovery();
   }
 }

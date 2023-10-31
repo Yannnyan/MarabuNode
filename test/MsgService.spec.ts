@@ -25,8 +25,11 @@ import serialize from "canonicalize"
 
 var host = "127.0.0.1"
 var port = 18019
+var def_port = 18018
 
-connectMongo(port);
+
+var conPort1 = connectMongo(def_port);
+var conPort2 = connectMongo(port);
 
 console.log(typeof(serialize))
 
@@ -95,4 +98,35 @@ describe("testing message manager", () => {
     })
 })
 
-describe("testing ")
+describe("Testing Node Protocols", () => {
+    var node = new MarabuNode();
+    var node2 = new MarabuNode(port, host);
+    node.conProvider.ListenToConnections()
+    node2.conProvider.ListenToConnections()
+    // node2.BootstrapDiscovery();
+    var socket = new net.Socket();
+    socket.connect({"host": node.host, "port": node.port}, function() {
+        var senderPeer = new OpenConnection(socket, true);
+        socket.on("data", (data:Buffer) => {
+            try {
+                node2.msgProvider.GetMessage(data, senderPeer);
+            }
+            catch(error) {
+                console.log(error);
+                senderPeer.SendError();
+            }
+        })
+        var tx = {"object":{"height":0,"outputs":[{
+            "pubkey":"8dbcd2401c89c04d6e53c81c90aa0b551cc8fc47c0469217c8f5cfbae1e911f9",
+            "value":50000000000}],"type":"transaction"},"type":"object"}
+        var obj = ApplicationObject.Parse(tx);
+        if(senderPeer !== undefined)
+        {
+            senderPeer.SendHello()
+            senderPeer.SendGetPeers()
+            senderPeer.SendIHaveObject(obj.GetID());
+        }
+    
+    })
+    
+})

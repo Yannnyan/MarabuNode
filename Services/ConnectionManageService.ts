@@ -5,16 +5,21 @@ import * as net from 'net';
 import { MessageManager } from "./MessageManageService.js";
 import {GetLog} from '../Localization/RuntimeLocal.js'
 import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
+import { IConnectionProvider } from "../API/Services/IConnectionProvider.js"; 
+import { injectable } from "tsyringe";
+import { IPeerProvider } from "../API/Services/IPeerProvider.js";
+import { IMessageProvider } from "../API/Services/IMessageProvider.js";
 
 
-export class ConnectionManager {
-    peerManager: PeerManager;
-    messageManager: MessageManager;
+@injectable()
+export class ConnectionManager implements IConnectionProvider{
+    peerProvider: IPeerProvider;
+    msgProvider: IMessageProvider;
     host: string;
     port: number;
-    constructor(peerManager: PeerManager, messageManager: MessageManager, host:string, port: number) {
-        this.peerManager = peerManager;
-        this.messageManager = messageManager;
+    constructor(peerManager: IPeerProvider, messageManager: IMessageProvider, host:string, port: number) {
+        this.peerProvider = peerManager;
+        this.msgProvider = messageManager;
         this.host = host;
         this.port = port;
     }
@@ -32,7 +37,7 @@ export class ConnectionManager {
             var peer: OpenConnection = new OpenConnection(socket, true);
             socket.on("data", (data:Buffer) => {
                 try {
-                    this.messageManager.GetMessage(data, peer);
+                    this.msgProvider.GetMessage(data, peer);
                 }
                 catch(error) {
                     console.log(error);
@@ -46,13 +51,13 @@ export class ConnectionManager {
     }
 
     async ListenToConnections() {
-        var node = this;
+        var conMan = this;
         const server = net.createServer((socket: net.Socket) => {
             var peer = new OpenConnection(socket, false);
 
             socket.on("data", (data:Buffer) => {
                 try {
-                    node.messageManager.GetMessage(data,peer);
+                    conMan.msgProvider.GetMessage(data,peer);
                 }
                 catch(error) {
                     console.log(error)

@@ -8,5 +8,7 @@
     "Node GetPeers": "GetPeers Node + ",
     "Node Peers": "Sending Peers Node + ",
     "Node Hello": "Sending Hello",
-    "Node Error": "Sending Error"
+    "Node Error": "Sending Error",
+    "Node IHaveObject": "IHaveObject Node + ",
+    "Node Object": "Object Node + "
 }

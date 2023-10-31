@@ -1,9 +1,10 @@
-import connectMongo from "./config/mongoose.js"
+import "reflect-metadata"
+
+import "./config/tsyringe.config.js"
 import { MarabuNode } from "./MarabuNode.js"
+import {container} from "tsyringe" 
 
-var port = process.argv.length >= 3 ? Number.parseInt(process.argv[2]) : undefined
-var node: MarabuNode = new MarabuNode(port)
+// var node: MarabuNode = new MarabuNode(port)
+var node: MarabuNode = container.resolve(MarabuNode);
 
-
-connectMongo(node.port);
 node.Start();
