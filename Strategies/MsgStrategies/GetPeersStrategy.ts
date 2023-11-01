@@ -1,6 +1,6 @@
 import { MsgStrategy } from "./MsgStrategy.js"
 import { GetLog } from "../../Localization/RuntimeLocal.js"
-import RuntimeLocal from '../../Localization/RuntimeLocal.json'
+import RuntimeLocal from '../../Localization/RuntimeLocal.json' assert { type: "json" };
 
 
 export class GetPeersStrategy extends MsgStrategy {

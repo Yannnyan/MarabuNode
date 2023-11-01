@@ -1,13 +1,10 @@
 import { OpenConnection } from "../Models/OpenConnection.js";
 import ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };;
-import { PeerManager } from "./PeerManageService.js";
-import { ConnectionManager } from "./ConnectionManageService.js";
 import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
 import {autoInjectable, injectable} from "tsyringe";
 import { GetLog } from "../Localization/RuntimeLocal.js";
 import { IMessageProvider } from "../API/Services/IMessageProvider.js";
 import { IPeerProvider } from "../API/Services/IPeerProvider.js";
-import { IConnectionProvider } from "../API/Services/IConnectionProvider.js";
 import { HandShakeStrategy } from "../Strategies/MsgStrategies/HandShakeStrategy.js";
 import { GetPeersStrategy } from "../Strategies/MsgStrategies/GetPeersStrategy.js";
 import { ErrorStrategy } from "../Strategies/MsgStrategies/ErrorStrategy.js";
@@ -43,10 +40,9 @@ export class MessageManager implements IMessageProvider{
         }
     
       #CheckHandshake(msg: any, peer:OpenConnection) {
-        if (msg["type"] !== "hello" && this.peerProvider.FindPeer(peer.host, peer.port) === undefined){
+        if (msg["type"] !== "hello" && !peer.isHandshaked){
           peer.SendError();
           console.log(GetLog(ErrorLocal["Runtime Peer Handshake"]))
-          peer.socket.destroy();
           return false;
         }
         return true;
@@ -55,56 +51,60 @@ export class MessageManager implements IMessageProvider{
       
     ParseMessages(msgs: string[], openConnection:OpenConnection): MsgStrategy[] {
         console.log(GetLog(RuntimeLocal["Node Parse"]))
+        var factory = this.peerProvider.GetConFactoryMap().get(openConnection);
+        if(!factory) {
+          console.log("factory undefined " + openConnection.host + " " + openConnection.port)
+          return [];
+        }
         var strats:MsgStrategy[] = []
-        var stratFactory = new MsgStrategyFactory(openConnection, msg);
         for(let m of msgs) {
           console.log(m)
           var msg = JSON.parse(m);
-          stratFactory.SetMsg(msg);
           var keys: string[] = Object.keys(msg)
           if (! this.#CheckType(keys)) return [];
           // not handshake and first message
-          if (!openConnection.isHandshaked && ! this.#CheckHandshake(msg, openConnection)) return [];  
-          var msgStrat = this.ParseMessage(msg, openConnection, stratFactory);
-          if(msgStrat === undefined)
+          if (! this.#CheckHandshake(msg, openConnection)) return []; 
+          var msgStrat = this.ParseMessage(msg, factory);
+          if(msgStrat !== undefined)
           {
-            console.log(ErrorLocal["Runtime Parse Error"] + JSON.stringify(msg));
-            return [];
-          }
-          else
             strats.push(msgStrat);
+          }
         }
         return strats;
       }
 
-      ParseMessage(msg: any, openConnection: OpenConnection, stratFactory: MsgStrategyFactory): MsgStrategy | undefined{
+      ParseMessage(msg: any, stratFactory: MsgStrategyFactory): MsgStrategy | undefined{
         var msgStrat;
         switch(msg["type"]) 
         {
           case "hello":
-            openConnection.isHandshaked = true;
-            msgStrat = stratFactory.CreateStrategy(HandShakeStrategy.name);
+            if(stratFactory.peer.isHandshaked){
+              // if we already have the peer then ignore the hello message
+                return undefined;
+            }
+            stratFactory.peer.isHandshaked = true;
+            msgStrat = stratFactory.CreateStrategy(HandShakeStrategy.name, msg);
             break;
           case "getpeers":
-            msgStrat = stratFactory.CreateStrategy(GetPeersStrategy.name);
+            msgStrat = stratFactory.CreateStrategy(GetPeersStrategy.name, msg);
             break;
           case "peers":
-            msgStrat = stratFactory.CreateStrategy(PeersStrategy.name);
+            msgStrat = stratFactory.CreateStrategy(PeersStrategy.name, msg);
             break;
           case "ihaveobject":
-              msgStrat = stratFactory.CreateStrategy(IHaveObjectStrategy.name);
+              msgStrat = stratFactory.CreateStrategy(IHaveObjectStrategy.name, msg);
               break;
           case "object":
-              msgStrat = stratFactory.CreateStrategy(ObjectStrategy.name);
+              msgStrat = stratFactory.CreateStrategy(ObjectStrategy.name, msg);
               break;
           case "getobject":
-              msgStrat = stratFactory.CreateStrategy(GetObjectStrategy.name);
+              msgStrat = stratFactory.CreateStrategy(GetObjectStrategy.name, msg);
               break;
           case "error":
-              msgStrat = stratFactory.CreateStrategy(ErrorStrategy.name);
+              msgStrat = stratFactory.CreateStrategy(ErrorStrategy.name, msg);
               break;
           default:
-            msgStrat = stratFactory.CreateStrategy(UnknownMsgStrategy.name);
+            msgStrat = stratFactory.CreateStrategy(UnknownMsgStrategy.name, msg);
         }
 
         return msgStrat;

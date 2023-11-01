@@ -11,7 +11,7 @@ import { ErrorStrategy } from "./ErrorStrategy.js";
 import { UnknownMsgStrategy } from "./UnknownMsgStrategy.js";
 import { MsgStrategy } from "./MsgStrategy.js";
 import { inject, injectable } from "tsyringe";
-import { ProviderTokens } from "../../config/ProviderTokens.js";
+// import { ProviderTokens } from "../../config/ProviderTokens.js";
 
 
 export class MsgStrategyFactory {
@@ -19,45 +19,37 @@ export class MsgStrategyFactory {
     peerProvider: IPeerProvider;
     conProvider: IConnectionProvider;
     valid_peer_version?: boolean;
-    msg: any;
 
     constructor(
         peer: OpenConnection, 
-        msg:any,
-        @inject(ProviderTokens.PeerProvider)
         peerManager: IPeerProvider,
-        @inject(ProviderTokens.ConnectionProvider) 
-        connectionManager: IConnectionProvider) {
+        connectionManager: IConnectionProvider
+        ) {
         this.peer = peer;
         this.peerProvider = peerManager;
         this.conProvider = connectionManager;
-        this.msg = msg;
     }
-
-    CreateStrategy(strategy_type: string): MsgStrategy {
+ 
+    CreateStrategy(strategy_type: string, msg:any): MsgStrategy {
         switch(strategy_type){
             case HandShakeStrategy.name:                
-                return new HandShakeStrategy(this.peer, this.peerProvider, this.conProvider, this.msg);
+                return new HandShakeStrategy(this.peer, this.peerProvider, this.conProvider, msg);
             case PeersStrategy.name:
-                return new PeersStrategy(this.peer, this.peerProvider, this.conProvider, this.msg);
+                return new PeersStrategy(this.peer, this.peerProvider, this.conProvider, msg);
             case ObjectStrategy.name:
-                return new ObjectStrategy(this.peer, this.peerProvider, this.conProvider, this.msg);
+                return new ObjectStrategy(this.peer, this.peerProvider, this.conProvider, msg);
             case GetPeersStrategy.name:
-                return new GetPeersStrategy(this.peer, this.peerProvider, this.conProvider, this.msg);
+                return new GetPeersStrategy(this.peer, this.peerProvider, this.conProvider, msg);
             case IHaveObjectStrategy.name:
-                return new IHaveObjectStrategy(this.peer, this.peerProvider, this.conProvider, this.msg);
+                return new IHaveObjectStrategy(this.peer, this.peerProvider, this.conProvider, msg);
             case GetObjectStrategy.name:
-                return new GetObjectStrategy(this.peer, this.peerProvider, this.conProvider, this.msg);
+                return new GetObjectStrategy(this.peer, this.peerProvider, this.conProvider, msg);
             case ErrorStrategy.name:
-                return new ErrorStrategy(this.peer, this.peerProvider, this.conProvider, this.msg);
+                return new ErrorStrategy(this.peer, this.peerProvider, this.conProvider, msg);
             case UnknownMsgStrategy.name:
-                return new UnknownMsgStrategy(this.peer, this.peerProvider, this.conProvider, this.msg);
+                return new UnknownMsgStrategy(this.peer, this.peerProvider, this.conProvider, msg);
             default:
                 throw new Error("Cannot parse the strategy type. " + strategy_type);
         }
-    }
-
-    SetMsg(msg:any) {
-        this.msg = msg;
     }
 }

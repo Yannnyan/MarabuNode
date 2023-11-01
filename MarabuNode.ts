@@ -42,7 +42,7 @@ export class MarabuNode {
       if(address.host === this.host && address.port === this.port){
         continue;
       }
-      if(this.peerProvider.FindPeer(address.host, address.port) === undefined) {
+      if(this.peerProvider.FindServer(address.host, address.port) === undefined) {
         console.log(GetLog(RuntimeLocal["Node Discovery"]) + " " + address.toString())
         this.conProvider.ConnectToAddress(address);
       }

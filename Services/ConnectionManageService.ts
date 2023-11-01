@@ -35,6 +35,9 @@ export class ConnectionManager implements IConnectionProvider{
     
         socket.connect({host: address.host, port: address.port}, () => {
             var peer: OpenConnection = new OpenConnection(socket, true);
+            this.peerProvider.AddOpenConnection(peer);
+            this.peerProvider.AddAddress(address);
+
             socket.on("data", (data:Buffer) => {
                 try {
                     this.msgProvider.GetMessage(data, peer);
@@ -54,6 +57,7 @@ export class ConnectionManager implements IConnectionProvider{
         var conMan = this;
         const server = net.createServer((socket: net.Socket) => {
             var peer = new OpenConnection(socket, false);
+            this.peerProvider.AddOpenConnection(peer);
 
             socket.on("data", (data:Buffer) => {
                 try {

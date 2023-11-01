@@ -2,7 +2,7 @@ import { MsgStrategy } from "./MsgStrategy.js";
 import { ApplicationObject } from "../../Models/ApplicationObject.js";
 import { PeerManager } from "../../Services/PeerManageService.js";
 import { GetLog } from "../../Localization/RuntimeLocal.js";
-import RuntimeLocal from '../../Localization/RuntimeLocal.json'
+import RuntimeLocal from '../../Localization/RuntimeLocal.json' assert { type: "json" };
 import { IPeerProvider } from "../../API/Services/IPeerProvider.js";
 
 

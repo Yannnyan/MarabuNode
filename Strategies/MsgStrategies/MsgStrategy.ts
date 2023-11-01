@@ -1,7 +1,7 @@
 import { IConnectionProvider } from "../../API/Services/IConnectionProvider.js";
 import { IPeerProvider } from "../../API/Services/IPeerProvider.js";
 import { OpenConnection } from "../../Models/OpenConnection.js";
-import ErrorLocal from '../../Localization/ErrorLocal.json'
+import ErrorLocal from '../../Localization/ErrorLocal.json' assert { type: "json" };
 
 
 export abstract class MsgStrategy {

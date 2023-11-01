@@ -1,7 +1,7 @@
 import { GetLog } from "../../Localization/RuntimeLocal.js";
 import { ApplicationObject } from "../../Models/ApplicationObject.js";
 import { MsgStrategy } from "./MsgStrategy.js";
-import RuntimeLocal from '../../Localization/RuntimeLocal.json'
+import RuntimeLocal from '../../Localization/RuntimeLocal.json' assert { type: "json" };
 
 
 export class IHaveObjectStrategy extends MsgStrategy {

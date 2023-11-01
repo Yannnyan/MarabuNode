@@ -1,6 +1,6 @@
 import { MsgStrategy } from "./MsgStrategy.js";
 import { ApplicationObject } from "../../Models/ApplicationObject.js";
-import GetObjMsg from '../../Messages/GetObject.json'
+import GetObjMsg from '../../Messages/GetObject.json' assert { type: "json" };
 
 
 

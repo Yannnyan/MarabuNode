@@ -1,16 +1,10 @@
 import * as net from "net";
-import ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };
-;
+import ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };;
 import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
-
-import HelloMsg from '../Messages/Hello.json' assert { type: "json" };
-;
-import ErrorMsg from '../Messages/Error.json' assert { type: "json" };
-; 
+import HelloMsg from '../Messages/Hello.json' assert { type: "json" };;
+import ErrorMsg from '../Messages/Error.json' assert { type: "json" };; 
 import GetPeersMsg from '../Messages/GetPeers.json' assert { type: "json" };
-
 import IHaveObjMsg from '../Messages/IHaveObject.json' assert { type: "json" };
-
 import GetObjMsg from '../Messages/GetObject.json' assert { type: "json" };
 
 

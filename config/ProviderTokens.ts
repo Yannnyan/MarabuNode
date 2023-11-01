@@ -1,7 +1,7 @@
-export enum ProviderTokens {
-    PeerProvider = "PeerProvider",
-    MessageProvider = "MessageProvider",
-    DBConProvider = "DBConnectionProvider",
-    ConnectionProvider = "ConnectionProvider",
+// export enum ProviderTokens {
+//     PeerProvider = "PeerProvider",
+//     MessageProvider = "MessageProvider",
+//     DBConProvider = "DBConnectionProvider",
+//     ConnectionProvider = "ConnectionProvider",
     
-}
+// }

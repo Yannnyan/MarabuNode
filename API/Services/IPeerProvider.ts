@@ -1,16 +1,18 @@
 import { Address } from "../../Models/Address.js";
 import { OpenConnection } from "../../Models/OpenConnection.js";
 import * as net from "net"
+import { MsgStrategyFactory } from "../../Strategies/MsgStrategies/MsgStrategyFactory.js";
 
 
 
 export interface IPeerProvider {
-    AddPeers: (peers: OpenConnection[]) => void;
+    AddOpenConnections: (peers: OpenConnection[]) => void;
     AddAddress: (address: Address) => void;
     AddAddresses: (addresses: Address[]) => void;
-    AddPeerFromSocket: (socket: net.Socket, isClient: boolean) => void;
-    AddPeer: (peer: OpenConnection) => void;
+    AddOpenConnection: (peer: OpenConnection) => void;
     GetPeers:() => any;
-    FindPeer: (host?: string ,port?: number, socket?: net.Socket) => Address | undefined;
+    FindServer: (host?: string ,port?: number, socket?: net.Socket) => Address | undefined;
     GetOpenConnections: () => OpenConnection[];
+    GetConFactoryMap: () => Map<OpenConnection,MsgStrategyFactory>;
+    RemoveOpenConnection: (peer: OpenConnection) => void;
 }
