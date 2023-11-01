@@ -1,7 +1,6 @@
 import { OpenConnection } from "../Models/OpenConnection.js";
 import ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };;
 import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
-import {autoInjectable, injectable} from "tsyringe";
 import { GetLog } from "../Localization/RuntimeLocal.js";
 import { IMessageProvider } from "../API/Services/IMessageProvider.js";
 import { IPeerProvider } from "../API/Services/IPeerProvider.js";
@@ -15,21 +14,25 @@ import { MsgStrategyFactory } from "../Strategies/MsgStrategies/MsgStrategyFacto
 import { ObjectStrategy } from "../Strategies/MsgStrategies/ObjectStrategy.js";
 import { PeersStrategy } from "../Strategies/MsgStrategies/PeersStrategy.js";
 import { UnknownMsgStrategy } from "../Strategies/MsgStrategies/UnknownMsgStrategy.js";
+import { Address } from "../Models/Address.js";
+import { container } from "../config/NodeObjectsContainer.js";
 
 
-
-@injectable()
 export class MessageManager implements IMessageProvider{
-    peerProvider: IPeerProvider;
+    peerProvider?: IPeerProvider;
     last_message: string;
     encoding: BufferEncoding;
+    address: Address;
 
-    constructor(peerProivder: IPeerProvider){
-        this.peerProvider = peerProivder;
+    constructor(address: Address){
         this.last_message = "";
         this.encoding = "utf-8";
+        this.address = address;
     }
 
+    #SetPeerProvider() {
+      this.peerProvider = container[this.address.toString()].peerProvider;
+    }
     #CheckType(keys: string[]) {
         var type = keys.find((some:string) => some === "type");
         if(type === undefined){
@@ -49,8 +52,11 @@ export class MessageManager implements IMessageProvider{
       }
     
       
-    ParseMessages(msgs: string[], openConnection:OpenConnection): MsgStrategy[] {
+    ParseMessages(msgs: string[], openConnection: OpenConnection): MsgStrategy[] {
         console.log(GetLog(RuntimeLocal["Node Parse"]))
+        if (!this.peerProvider) this.#SetPeerProvider();
+        if( !this.peerProvider) throw new Error("peer provider undefined");
+
         var factory = this.peerProvider.GetConFactoryMap().get(openConnection);
         if(!factory) {
           console.log("factory undefined " + openConnection.host + " " + openConnection.port)

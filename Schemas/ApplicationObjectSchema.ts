@@ -1,8 +1,10 @@
-import mongoose from "mongoose";
+import mongoose, { Connection } from "mongoose";
 
-var ObjSchema = new mongoose.Schema({
-    "objectid": String,
-    "object": {}
-})
-
-mongoose.model("ApplicationObject", ObjSchema);
+export function CreateApplicationObjectSchema(con: Connection) {
+    var ObjSchema = new mongoose.Schema({
+        "objectid": String,
+        "object": {}
+    })
+    
+    con.model("ApplicationObject", ObjSchema);    
+}

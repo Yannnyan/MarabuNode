@@ -1,5 +1,4 @@
 
-import mongoose from "mongoose";
 import { ApplicationObject } from "./ApplicationObject.js";
 import * as ed from "@noble/ed25519"
 import { sha512 } from "@noble/hashes/sha512";
@@ -7,9 +6,8 @@ import { Block } from "./Block.js";
 import canonicalize from "canonicalize"
 import { Input } from "./Input.js";
 import { Output } from "./Output.js";
-import { Outpoint } from "./Outpoint.js";
+import { ApplicationObjectDB } from "../DB/ApplicationObject.db.js";
 
-var ObjectModel = mongoose.model("ApplicationObject")
 
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
 
@@ -73,12 +71,12 @@ export class Transaction {
         return {"outputs": d.outputs, "inputs": inputs, "type":d.type}
     }
 
-    async Verify(msgID: string): Promise<boolean> {
+    async Verify(appObjDB: ApplicationObjectDB): Promise<boolean> {
         var matchingOutputs: Transaction[] = []
         var nosigTx = this.GetNoSig()
 
         for(let input of this.inputs){
-            var out: ApplicationObject = (await ApplicationObject.FindById(input.outpoint.txid))
+            var out: ApplicationObject = (await appObjDB.FindById(input.outpoint.txid))
             if (! out){
                 throw new Error("Outpoint of Transaction Couldn't be found. ")
             }

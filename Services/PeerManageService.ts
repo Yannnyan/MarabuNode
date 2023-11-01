@@ -1,23 +1,18 @@
-import { Socket } from "dgram";
 import * as net from "net";
-import KnownPeers from '../Discovery/KnownPeers.json' assert { type: "json" };
-import * as ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };
-import * as fs from "fs"
 import PeersMsg from '../Messages/Peers.json' assert { type: "json" };
 import {OpenConnection} from '../Models/OpenConnection.js';
 import { Address } from "../Models/Address.js";
-import {autoInjectable} from "tsyringe"
 import { IPeerProvider } from "../API/Services/IPeerProvider.js";
 import { MsgStrategyFactory } from "../Strategies/MsgStrategies/MsgStrategyFactory.js";
-import { container } from "tsyringe";
 import { ConnectionManager } from "./ConnectionManageService.js";
+import { container } from "../config/NodeObjectsContainer.js";
 
 
-@autoInjectable()
 export class PeerManager implements IPeerProvider {
     openConnections: OpenConnection[];
     peerFactoryMap: Map<OpenConnection,MsgStrategyFactory>;
     serverList: Address[];
+    address: Address;
     peerMsg;
 
     constructor(adress: Address) {
@@ -25,6 +20,7 @@ export class PeerManager implements IPeerProvider {
         this.serverList = [adress];
         this.peerMsg = {"type": PeersMsg.type, "peers": PeersMsg.peers};
         this.peerFactoryMap = new Map();
+        this.address = adress;
     }
     GetOpenConnections(): OpenConnection[] {
         return this.openConnections;
@@ -59,7 +55,7 @@ export class PeerManager implements IPeerProvider {
             return false;
         }
         this.openConnections.push(peer);
-        this.peerFactoryMap.set(peer, new MsgStrategyFactory(peer, this, container.resolve(ConnectionManager)));
+        this.peerFactoryMap.set(peer, new MsgStrategyFactory(peer, this, container[this.address.toString()].conProvider));
         return true;
     }
 

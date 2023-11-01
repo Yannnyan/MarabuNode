@@ -1,46 +1,51 @@
-import { PeerManager } from "./PeerManageService.js";
 import { Address } from "../Models/Address.js";
 import { OpenConnection } from "../Models/OpenConnection.js";
 import * as net from 'net';
-import { MessageManager } from "./MessageManageService.js";
 import {GetLog} from '../Localization/RuntimeLocal.js'
 import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
 import { IConnectionProvider } from "../API/Services/IConnectionProvider.js"; 
-import { injectable } from "tsyringe";
 import { IPeerProvider } from "../API/Services/IPeerProvider.js";
 import { IMessageProvider } from "../API/Services/IMessageProvider.js";
+import { container } from "../config/NodeObjectsContainer.js";
 
 
-@injectable()
 export class ConnectionManager implements IConnectionProvider{
-    peerProvider: IPeerProvider;
-    msgProvider: IMessageProvider;
-    host: string;
-    port: number;
-    constructor(peerManager: IPeerProvider, messageManager: IMessageProvider, host:string, port: number) {
-        this.peerProvider = peerManager;
-        this.msgProvider = messageManager;
-        this.host = host;
-        this.port = port;
-    }
+    peerProvider?: IPeerProvider;
+    msgProvider?: IMessageProvider;
+    address: Address;
+    constructor(address: Address) {
+        this.address = address;
+    }   
 
+    #SetUninitialized() {
+        this.peerProvider = container[this.address.toString()].peerProvider;
+        this.msgProvider = container[this.address.toString()].msgProvider;
+    }
     CheckIsMe(address: Address) {
-        return this.host === address.host && this.port === address.port;
+        return this.address.host === address.host && this.address.port === address.port;
     }
 
     ConnectToAddress(address: Address) {
+        if( !this.peerProvider || !this.msgProvider)
+            this.#SetUninitialized();
+        if (! this.peerProvider || !this.msgProvider)
+            throw new Error("cannot find peer provider or msgprovider");
+        var peerProvider = this.peerProvider;
+        var msgProvider = this.msgProvider;
+        
         // assumes the address is not one that is connected
         console.log(GetLog(RuntimeLocal["Node Connect"]) + " " + address.toString());
         var socket = new net.Socket();
     
-        socket.connect({host: address.host, port: address.port}, () => {
+        return socket.connect({host: address.host, port: address.port}, () => {
+            
             var peer: OpenConnection = new OpenConnection(socket, true);
-            this.peerProvider.AddOpenConnection(peer);
-            this.peerProvider.AddAddress(address);
+            peerProvider.AddOpenConnection(peer);
+            peerProvider.AddAddress(address);
 
             socket.on("data", (data:Buffer) => {
                 try {
-                    this.msgProvider.GetMessage(data, peer);
+                    msgProvider.GetMessage(data, peer);
                 }
                 catch(error) {
                     console.log(error);
@@ -54,14 +59,20 @@ export class ConnectionManager implements IConnectionProvider{
     }
 
     async ListenToConnections() {
-        var conMan = this;
+        if( !this.peerProvider || !this.msgProvider)
+            this.#SetUninitialized();
+        if (! this.peerProvider || !this.msgProvider)
+            throw new Error("cannot find peer provider or msgprovider");
+        var peerProvider = this.peerProvider;
+        var msgProvider = this.msgProvider;
+        
         const server = net.createServer((socket: net.Socket) => {
             var peer = new OpenConnection(socket, false);
-            this.peerProvider.AddOpenConnection(peer);
+            peerProvider.AddOpenConnection(peer);
 
             socket.on("data", (data:Buffer) => {
                 try {
-                    conMan.msgProvider.GetMessage(data,peer);
+                    msgProvider.GetMessage(data,peer);
                 }
                 catch(error) {
                     console.log(error)
@@ -70,8 +81,8 @@ export class ConnectionManager implements IConnectionProvider{
             })
             
         });
-        server.listen(this.port, this.host)
-        console.log(RuntimeLocal["Started Listening"] + " " + this.host+ ":" + this.port)
+        server.listen(this.address.port, this.address.host)
+        console.log(RuntimeLocal["Started Listening"] + " " + this.address.toString())
     }
 
     AddPeersFromAddresses(addresses: Address[]) {

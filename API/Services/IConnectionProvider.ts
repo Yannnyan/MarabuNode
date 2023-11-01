@@ -1,8 +1,7 @@
 import { Address } from "../../Models/Address.js";
 
 export interface IConnectionProvider {
-    host: string;
-    port: number;
+    address: Address;
     /**
      * Connect to the given address in a tcp socket from the instanciated host and port.
      * @param address 

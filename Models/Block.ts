@@ -1,3 +1,4 @@
+import { ApplicationObjectDB } from "../DB/ApplicationObject.db.js";
 
 
 var blockDict = {"type": String,
@@ -46,7 +47,7 @@ export class Block {
                                         obj["T"], obj["miner"], obj["note"])
     }
 
-    async Verify(msgID: string): Promise<boolean> {
+    async Verify(appObj: ApplicationObjectDB): Promise<boolean> {
         throw new Error("Not implemented");
     }
 
