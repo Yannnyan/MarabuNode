@@ -10,44 +10,41 @@ import { GetObjectStrategy } from "./GetObjectStrategy.js";
 import { ErrorStrategy } from "./ErrorStrategy.js";
 import { UnknownMsgStrategy } from "./UnknownMsgStrategy.js";
 import { MsgStrategy } from "./MsgStrategy.js";
-import { inject, injectable } from "tsyringe";
-// import { ProviderTokens } from "../../config/ProviderTokens.js";
+import { Address } from "../../Models/Address.js";
 
 
 export class MsgStrategyFactory {
     peer: OpenConnection;
-    peerProvider: IPeerProvider;
-    conProvider: IConnectionProvider;
+    address:Address;
+
     valid_peer_version?: boolean;
 
     constructor(
         peer: OpenConnection, 
-        peerManager: IPeerProvider,
-        connectionManager: IConnectionProvider
-        ) {
+        address: Address) {
         this.peer = peer;
-        this.peerProvider = peerManager;
-        this.conProvider = connectionManager;
+        this.address = address;
     }
  
     CreateStrategy(strategy_type: string, msg:any): MsgStrategy {
+        
         switch(strategy_type){
             case HandShakeStrategy.name:                
-                return new HandShakeStrategy(this.peer, this.peerProvider, this.conProvider, msg);
+                return new HandShakeStrategy(this.peer, msg, this.address);
             case PeersStrategy.name:
-                return new PeersStrategy(this.peer, this.peerProvider, this.conProvider, msg);
+                return new PeersStrategy(this.peer,  msg, this.address);
             case ObjectStrategy.name:
-                return new ObjectStrategy(this.peer, this.peerProvider, this.conProvider, msg);
+                return new ObjectStrategy(this.peer, msg, this.address);
             case GetPeersStrategy.name:
-                return new GetPeersStrategy(this.peer, this.peerProvider, this.conProvider, msg);
+                return new GetPeersStrategy(this.peer, msg, this.address);
             case IHaveObjectStrategy.name:
-                return new IHaveObjectStrategy(this.peer, this.peerProvider, this.conProvider, msg);
+                return new IHaveObjectStrategy(this.peer, msg, this.address);
             case GetObjectStrategy.name:
-                return new GetObjectStrategy(this.peer, this.peerProvider, this.conProvider, msg);
+                return new GetObjectStrategy(this.peer, msg, this.address);
             case ErrorStrategy.name:
-                return new ErrorStrategy(this.peer, this.peerProvider, this.conProvider, msg);
+                return new ErrorStrategy(this.peer, msg, this.address);
             case UnknownMsgStrategy.name:
-                return new UnknownMsgStrategy(this.peer, this.peerProvider, this.conProvider, msg);
+                return new UnknownMsgStrategy(this.peer, msg, this.address);
             default:
                 throw new Error("Cannot parse the strategy type. " + strategy_type);
         }

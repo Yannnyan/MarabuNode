@@ -5,7 +5,7 @@ import { Address } from "../Models/Address.js";
 import { IPeerProvider } from "../API/Services/IPeerProvider.js";
 import { MsgStrategyFactory } from "../Strategies/MsgStrategies/MsgStrategyFactory.js";
 import { ConnectionManager } from "./ConnectionManageService.js";
-import { container } from "../config/NodeObjectsContainer.js";
+import { container } from "./NodeContainerService.js";
 
 
 export class PeerManager implements IPeerProvider {
@@ -55,7 +55,7 @@ export class PeerManager implements IPeerProvider {
             return false;
         }
         this.openConnections.push(peer);
-        this.peerFactoryMap.set(peer, new MsgStrategyFactory(peer, this, container[this.address.toString()].conProvider));
+        this.peerFactoryMap.set(peer, new MsgStrategyFactory(peer, this.address));
         return true;
     }
 

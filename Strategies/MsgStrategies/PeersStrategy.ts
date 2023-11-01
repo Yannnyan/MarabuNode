@@ -2,6 +2,7 @@ import { GetLog } from "../../Localization/RuntimeLocal.js";
 import { Address } from "../../Models/Address.js";
 import { MsgStrategy } from "./MsgStrategy.js";
 import RuntimeLocal from '../../Localization/RuntimeLocal.json' assert { type: "json" };
+import { container } from "../../Services/NodeContainerService.js";
 
 
 export class PeersStrategy extends MsgStrategy {
@@ -10,9 +11,11 @@ export class PeersStrategy extends MsgStrategy {
         console.log(GetLog(RuntimeLocal['Node Peers']))
         var peers = this.CheckHasPeers(this.msg);
         var addresses = peers.map((s) => Address.CreateAddressFromString(s));
-        addresses = addresses.filter((address) =>
-         !this.connectionManager.CheckIsMe(address) && this.peerManager.FindServer(address.host, address.port) === undefined);
-        this.connectionManager.AddPeersFromAddresses(addresses);
+        var nodeCont = container[this.address.toString()];
+        addresses = addresses.filter(
+            (address) => !nodeCont.conProvider.CheckIsMe(address) && nodeCont.peerProvider.FindServer(address.host, address.port) === undefined
+        );
+        nodeCont.conProvider.AddPeersFromAddresses(addresses);
     }
     
 }

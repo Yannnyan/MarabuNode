@@ -15,7 +15,7 @@ import { ObjectStrategy } from "../Strategies/MsgStrategies/ObjectStrategy.js";
 import { PeersStrategy } from "../Strategies/MsgStrategies/PeersStrategy.js";
 import { UnknownMsgStrategy } from "../Strategies/MsgStrategies/UnknownMsgStrategy.js";
 import { Address } from "../Models/Address.js";
-import { container } from "../config/NodeObjectsContainer.js";
+import { container } from "./NodeContainerService.js";
 
 
 export class MessageManager implements IMessageProvider{

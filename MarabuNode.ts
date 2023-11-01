@@ -12,7 +12,7 @@ import { PeerManager } from "./Services/PeerManageService.js";
 import { MessageManager } from "./Services/MessageManageService.js";
 import { ConnectionManager } from "./Services/ConnectionManageService.js";
 import { DBConnectionManager } from "./Services/DBConnectionManagerService.js";
-import { NodeContainer, container } from "./config/NodeObjectsContainer.js";
+import { NodeContainer, container } from "./Services/NodeContainerService.js";
 
 
 

@@ -6,7 +6,7 @@ import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "jso
 import { IConnectionProvider } from "../API/Services/IConnectionProvider.js"; 
 import { IPeerProvider } from "../API/Services/IPeerProvider.js";
 import { IMessageProvider } from "../API/Services/IMessageProvider.js";
-import { container } from "../config/NodeObjectsContainer.js";
+import { container } from "./NodeContainerService.js";
 
 
 export class ConnectionManager implements IConnectionProvider{

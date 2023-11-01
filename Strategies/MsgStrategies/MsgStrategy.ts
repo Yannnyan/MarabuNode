@@ -2,20 +2,20 @@ import { IConnectionProvider } from "../../API/Services/IConnectionProvider.js";
 import { IPeerProvider } from "../../API/Services/IPeerProvider.js";
 import { OpenConnection } from "../../Models/OpenConnection.js";
 import ErrorLocal from '../../Localization/ErrorLocal.json' assert { type: "json" };
+import { Address } from "../../Models/Address.js";
 
 
 export abstract class MsgStrategy {
     peer: OpenConnection;
-    peerManager: IPeerProvider;
-    connectionManager: IConnectionProvider;
+    address: Address;
     valid_peer_version?: boolean;
     msg: any;
 
-    constructor(peer: OpenConnection, peerManager: IPeerProvider, connectionManager: IConnectionProvider, msg:any) {
+    constructor(peer: OpenConnection, msg:any, address:Address) {
         this.peer = peer;
-        this.peerManager = peerManager;
-        this.connectionManager = connectionManager;
         this.msg = msg;
+        this.address = address;
+
     }
    
   CheckVersion(msg?: any): boolean {

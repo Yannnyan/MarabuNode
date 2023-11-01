@@ -21,7 +21,7 @@ import PeersMsg from '../Messages/Peers.json' assert { type: "json" };
 import IHaveObjectMsg from '../Messages/IHaveObject.json' assert { type: "json" };
 import ErrorMsg from '../Messages/Error.json' assert { type: "json" };
 import { MarabuNode } from "../MarabuNode.js";
-import { container } from "../config/NodeObjectsContainer.js";
+import { container } from "../Services/NodeContainerService.js";
 import { MessageManager } from "../Services/MessageManageService.js";
 
 
