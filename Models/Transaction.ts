@@ -105,7 +105,15 @@ export class Transaction {
             }
         }
         if (this.coinbase)
+        {
+            if (this.inputs.length !== 0 || this.outputs.length !== 1)
+                throw new Error("Coinbase transaction input length is not 0, or output length is not 1");
+            if (this.height && this.height < 0)
+                throw new Error("height cannot be less than 0.");
+            
             return true;
+
+        }
         var sum_inputs:number = matchingOutputs.reduce(function (prevValue, curElement) {
             return prevValue + curElement.outputs.reduce((pv, ce) => pv + ce.value,0);
         },0)

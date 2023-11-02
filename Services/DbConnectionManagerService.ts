@@ -18,7 +18,7 @@ export class DBConnectionManager implements IDBConnectionProvider {
         console.log("Connected on port: " + this.address.port)
 
         CreateApplicationObjectSchema(this.connection);
-        this.appObj = new ApplicationObjectDB(this.connection);
+        this.appObj = new ApplicationObjectDB(this.connection, this.address);
     }
 
 }

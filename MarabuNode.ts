@@ -13,6 +13,8 @@ import { MessageManager } from "./Services/MessageManageService.js";
 import { ConnectionManager } from "./Services/ConnectionManageService.js";
 import { DBConnectionManager } from "./Services/DBConnectionManagerService.js";
 import { NodeContainer, container } from "./Services/NodeContainerService.js";
+import { PendingRequestManager } from "./Services/PendingRequestManager.js";
+import { IPendingReqeustProvider } from "./API/Services/IPendingRequestProvider.js";
 
 
 
@@ -22,6 +24,7 @@ export class MarabuNode {
     msgProvider: IMessageProvider;
     dbConProvider: IDBConnectionProvider;
     logger: MyLogger;
+    pendReqProvider: IPendingReqeustProvider;
     address: Address;
 
   constructor(host: string, port: number) {
@@ -30,10 +33,11 @@ export class MarabuNode {
     this.msgProvider = new MessageManager(this.address);
     this.conProvider = new ConnectionManager(this.address);
     this.dbConProvider = new DBConnectionManager(this.address);
-    this.logger = new MyLogger(this.address)
+    this.logger = new MyLogger(this.address);
+    this.pendReqProvider = new PendingRequestManager();
+
     container[this.address.toString()] = new NodeContainer(this.peerProvider,this.msgProvider, 
-      this.conProvider, this.dbConProvider, this.logger);
-    
+      this.conProvider, this.dbConProvider, this.logger, this.pendReqProvider);
   }
   
 

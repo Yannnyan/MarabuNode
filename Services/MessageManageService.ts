@@ -138,7 +138,9 @@ export class MessageManager implements IMessageProvider{
 
       GetMessage(msg: Buffer, peer: OpenConnection) {
         container[this.address.toString()].logger.Log(RuntimeLocal.Data);
+        var pendReqProvider = container[this.address.toString()].pendingRequestProvider
         var msgStrats = this.ParseMessages(this.DivideMessage(msg.toString(this.encoding)), peer)
         msgStrats?.forEach((strat) => strat.HandleMessage());
+        msgStrats?.forEach((strat) => pendReqProvider.GetMsgStrategy(strat));
       }
 }

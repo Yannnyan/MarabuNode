@@ -15,7 +15,7 @@ export class ObjectStrategy extends MsgStrategy {
     }
 
     HandleMessage(): void {
-        let obj = ApplicationObject.Parse(this.msg);
+        let obj = ApplicationObject.Parse(this.msg, this.address);
 
         container[this.address.toString()].logger.Log(RuntimeLocal["Strategy Object"] + " " + obj.ToString())
         var appObj = container[this.address.toString()].DBConProvider.appObj;
