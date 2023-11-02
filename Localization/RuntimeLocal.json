@@ -1,14 +1,21 @@
 {
     "Started Listening": "Started Listening On : ",
-    "Node Discovery" : "Discovering new node: ",
-    "Node Connect": "Connecting + ",
-    "Node Data": "Recieved Data + ",
-    "Node Parse": "Parsing Message + ",
-    "Node HandShake": "Handshaking Node + ",
-    "Node GetPeers": "GetPeers Node + ",
-    "Node Peers": "Sending Peers Node + ",
-    "Node Hello": "Sending Hello",
-    "Node Error": "Sending Error",
-    "Node IHaveObject": "IHaveObject Node + ",
-    "Node Object": "Object Node + "
+    "Discovery" : "Discovering new node: ",
+    "Connect": "Connecting + ",
+    "Data": "Recieved Data + ",
+    "Parse": "Parsing Message + ",
+    
+    "Strategy HandShake": "Handshaking Strategy + ",
+    "Strategy GetPeers": "GetPeers Strategy + ",
+    "Strategy Object": "Object Strategy + ",
+    "Strategy IHaveObject": "IHaveObject Strategy + ",
+
+    "Send Peers": "Sending Peers",
+    "Send Hello": "Sending Hello",
+    "Send Error": "Sending Error",
+    "Send GetObject": "Sending Get Object",
+    "Send GetPeers": "Sending Get Peers",
+    "Send IHaveObject": "Sending I Have Object",
+    "Send Object": "Sending Object"
+
 }

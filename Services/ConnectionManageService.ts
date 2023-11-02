@@ -1,7 +1,6 @@
 import { Address } from "../Models/Address.js";
 import { OpenConnection } from "../Models/OpenConnection.js";
 import * as net from 'net';
-import {GetLog} from '../Localization/RuntimeLocal.js'
 import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
 import { IConnectionProvider } from "../API/Services/IConnectionProvider.js"; 
 import { IPeerProvider } from "../API/Services/IPeerProvider.js";
@@ -34,12 +33,12 @@ export class ConnectionManager implements IConnectionProvider{
         var msgProvider = this.msgProvider;
         
         // assumes the address is not one that is connected
-        console.log(GetLog(RuntimeLocal["Node Connect"]) + " " + address.toString());
+        container[this.address.toString()].logger.Log(RuntimeLocal["Connect"] + " " + address.toString());
         var socket = new net.Socket();
     
         return socket.connect({host: address.host, port: address.port}, () => {
             
-            var peer: OpenConnection = new OpenConnection(socket, true);
+            var peer: OpenConnection = new OpenConnection(socket, true, this.address);
             peerProvider.AddOpenConnection(peer);
             peerProvider.AddAddress(address);
 
@@ -67,7 +66,7 @@ export class ConnectionManager implements IConnectionProvider{
         var msgProvider = this.msgProvider;
         
         const server = net.createServer((socket: net.Socket) => {
-            var peer = new OpenConnection(socket, false);
+            var peer = new OpenConnection(socket, false, this.address);
             peerProvider.AddOpenConnection(peer);
 
             socket.on("data", (data:Buffer) => {

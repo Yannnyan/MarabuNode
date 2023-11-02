@@ -1,7 +1,7 @@
 import { OpenConnection } from "./Models/OpenConnection.js";
 import { Address } from "./Models/Address.js";
 import RuntimeLocal from "./Localization/RuntimeLocal.json" assert { type: "json" };
-import { GetLog } from "./Localization/RuntimeLocal.js";
+import {MyLogger } from "./Localization/RuntimeLocal.js";
 import TestHardCodedIps from './Discovery/TestHardCodedIPs.json' assert { type: "json" };
 import { ApplicationObject } from "./Models/ApplicationObject.js";
 import { IDBConnectionProvider } from "./API/Services/IDBConnectionProvider.js";
@@ -21,6 +21,7 @@ export class MarabuNode {
     conProvider: IConnectionProvider;
     msgProvider: IMessageProvider;
     dbConProvider: IDBConnectionProvider;
+    logger: MyLogger;
     address: Address;
 
   constructor(host: string, port: number) {
@@ -29,7 +30,10 @@ export class MarabuNode {
     this.msgProvider = new MessageManager(this.address);
     this.conProvider = new ConnectionManager(this.address);
     this.dbConProvider = new DBConnectionManager(this.address);
-    container[this.address.toString()] = new NodeContainer(this.peerProvider,this.msgProvider, this.conProvider, this.dbConProvider);
+    this.logger = new MyLogger(this.address)
+    container[this.address.toString()] = new NodeContainer(this.peerProvider,this.msgProvider, 
+      this.conProvider, this.dbConProvider, this.logger);
+    
   }
   
 
@@ -42,7 +46,7 @@ export class MarabuNode {
         continue;
       }
       if(this.peerProvider.FindServer(address.host, address.port) === undefined) {
-        console.log(GetLog(RuntimeLocal["Node Discovery"]) + " " + address.toString())
+        this.logger.Log(RuntimeLocal.Discovery);
         this.conProvider.ConnectToAddress(address);
       }
     }

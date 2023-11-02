@@ -1,7 +1,6 @@
 import { OpenConnection } from "../Models/OpenConnection.js";
 import ErrorLocal from '../Localization/ErrorLocal.json' assert { type: "json" };;
 import RuntimeLocal from '../Localization/RuntimeLocal.json' assert { type: "json" };
-import { GetLog } from "../Localization/RuntimeLocal.js";
 import { IMessageProvider } from "../API/Services/IMessageProvider.js";
 import { IPeerProvider } from "../API/Services/IPeerProvider.js";
 import { HandShakeStrategy } from "../Strategies/MsgStrategies/HandShakeStrategy.js";
@@ -36,7 +35,7 @@ export class MessageManager implements IMessageProvider{
     #CheckType(keys: string[]) {
         var type = keys.find((some:string) => some === "type");
         if(type === undefined){
-            console.log(ErrorLocal["Runtime Wrong Message Format"]);
+          container[this.address.toString()].logger.Log(ErrorLocal["Runtime Wrong Message Format"]);
             return false;
         }
         return true;
@@ -45,7 +44,7 @@ export class MessageManager implements IMessageProvider{
       #CheckHandshake(msg: any, peer:OpenConnection) {
         if (msg["type"] !== "hello" && !peer.isHandshaked){
           peer.SendError();
-          console.log(GetLog(ErrorLocal["Runtime Peer Handshake"]))
+          container[this.address.toString()].logger.Log(ErrorLocal["Runtime Peer Handshake"])
           return false;
         }
         return true;
@@ -53,13 +52,13 @@ export class MessageManager implements IMessageProvider{
     
       
     ParseMessages(msgs: string[], openConnection: OpenConnection): MsgStrategy[] {
-        console.log(GetLog(RuntimeLocal["Node Parse"]))
+        container[this.address.toString()].logger.Log(RuntimeLocal.Parse)
         if (!this.peerProvider) this.#SetPeerProvider();
         if( !this.peerProvider) throw new Error("peer provider undefined");
 
         var factory = this.peerProvider.GetConFactoryMap().get(openConnection);
         if(!factory) {
-          console.log("factory undefined " + openConnection.host + " " + openConnection.port)
+          container[this.address.toString()].logger.Log("factory undefined " + openConnection.remoteAddress.toString());
           return [];
         }
         var strats:MsgStrategy[] = []
@@ -138,7 +137,7 @@ export class MessageManager implements IMessageProvider{
       }
 
       GetMessage(msg: Buffer, peer: OpenConnection) {
-        console.log(GetLog(RuntimeLocal["Node Data"]) + msg.toString(this.encoding));
+        container[this.address.toString()].logger.Log(RuntimeLocal.Data);
         var msgStrats = this.ParseMessages(this.DivideMessage(msg.toString(this.encoding)), peer)
         msgStrats?.forEach((strat) => strat.HandleMessage());
       }

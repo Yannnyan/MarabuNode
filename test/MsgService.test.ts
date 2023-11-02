@@ -39,7 +39,7 @@ describe("testing message manager", () => {
         socket.connect({host: host, port: port}, () => {
 
             console.log(socket)
-            var peer: OpenConnection = new OpenConnection(socket, true);
+            var peer: OpenConnection = new OpenConnection(socket, true, node.address);
             
             var msgs: string[] = [JSON.stringify(HelloMsg), JSON.stringify(GetPeerMsg),
                                     JSON.stringify(IHaveObjectMsg), JSON.stringify(PeersMsg), JSON.stringify(GetObjectMsg),

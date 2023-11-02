@@ -29,7 +29,7 @@ export class PeerManager implements IPeerProvider {
         return this.peerFactoryMap;
     }
     #UpdatePeers() {
-        var lst: string[] = this.serverList.map((address: Address) => address.host + ":" + address.port.toString());
+        var lst: string[] = this.serverList.map((address: Address) => address.toString());
         this.peerMsg.peers = lst;
         // fs.open('../Discovery/KnownPeers.json', (err,fd) => {
         //     fs.writeFile(fd, new Uint8Array(Buffer.from(JSON.stringify(KnownPeers))),()=>{});
@@ -50,7 +50,7 @@ export class PeerManager implements IPeerProvider {
     }
 
     #AddOpenConnectionNoUpdate(peer: OpenConnection) {
-        if(this.FindServer(peer.host, peer.port) !== undefined)
+        if(this.FindServer(peer.remoteAddress.host, peer.remoteAddress.port) !== undefined)
         {
             return false;
         }

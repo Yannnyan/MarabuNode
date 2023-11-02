@@ -6,24 +6,24 @@ import ErrorMsg from '../Messages/Error.json' assert { type: "json" };;
 import GetPeersMsg from '../Messages/GetPeers.json' assert { type: "json" };
 import IHaveObjMsg from '../Messages/IHaveObject.json' assert { type: "json" };
 import GetObjMsg from '../Messages/GetObject.json' assert { type: "json" };
-
+import { container } from "../Services/NodeContainerService.js";
 
 
 import {ApplicationObject} from '../Models/ApplicationObject.js';
-import { GetLog } from "../Localization/RuntimeLocal.js";
+import { Address } from "./Address.js";
 
 var canonicalize = JSON.stringify
 
 
 export class OpenConnection {
     encoding: BufferEncoding = "utf-8";
-    port: number;
-    host: string;
+    remoteAddress: Address;
+    myAddress: Address;
     socket: net.Socket;
     isClient: boolean;
     isHandshaked: boolean;
 
-    constructor(socket:net.Socket, isClient: boolean){
+    constructor(socket:net.Socket, isClient: boolean, myAddress: Address){
         if(socket.remoteAddress === undefined)
         {
             throw new Error(ErrorLocal["Runtime Peer Construction Address"]);
@@ -31,11 +31,15 @@ export class OpenConnection {
         if (socket.remotePort === undefined) {
             throw new Error(ErrorLocal["Runtime Peer Construction Port"]);
         }
-        this.port = socket.remotePort;
-        this.host = socket.remoteAddress;
+        this.myAddress = myAddress;
+        this.remoteAddress = new Address(socket.remoteAddress,socket.remotePort);
         this.socket =  socket;
         this.isClient = isClient;
         this.isHandshaked = false;
+    }
+
+    #Log(msg: string) {
+        container[this.myAddress.toString()].logger.Log(msg)
     }
 
     SendMsg(msg?: string, msgDict?: {}) {
@@ -48,36 +52,41 @@ export class OpenConnection {
     }
 
     SendHello() {
-        console.log(GetLog(RuntimeLocal["Node Hello"]))
+        this.#Log(RuntimeLocal["Send Hello"])
         this.SendMsg(undefined,HelloMsg)
     }
 
     SendError() {
-        console.log(GetLog(RuntimeLocal["Node Error"]))
+        this.#Log(RuntimeLocal["Send Error"])
         this.SendMsg(undefined, ErrorMsg)
     }
 
     SendPeers(peers: any) {
+        this.#Log(RuntimeLocal["Send Peers"])
         this.SendMsg(undefined, peers)
     }
 
     SendGetPeers() {
+        this.#Log(RuntimeLocal["Send GetPeers"])
         this.SendMsg(undefined, GetPeersMsg)
     }
 
     SendIHaveObject(objectid: string) {
+        this.#Log(RuntimeLocal["Send IHaveObject"])
         var ihaveobj = IHaveObjMsg;
         ihaveobj.objectid = objectid;
         this.SendMsg(undefined, ihaveobj);
     }
 
     SendGetObject(objectid: string) {
+        this.#Log(RuntimeLocal["Send GetObject"])
         var getobj = GetObjMsg;
         getobj.objectid = objectid;
         this.SendMsg(undefined, getobj);
     }
 
     SendObject(appObj: ApplicationObject) {
+        this.#Log(RuntimeLocal["Send Object"])
         this.SendMsg(appObj.ToString());
     }
     
