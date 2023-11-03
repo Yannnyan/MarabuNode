@@ -5,9 +5,12 @@ import serialize from "canonicalize"
 import { ApplicationObject } from "../Models/ApplicationObject.js"
 import { it } from "node:test";
 import { MarabuNode } from "../MarabuNode.js";
+import { Block } from "../Models/Block.js";
 
 var host = "127.0.0.1"
 var port = 18018
+
+var node = new MarabuNode(host, port);
 
 
 describe("Testing ApplicationObject Model", async () => {
@@ -47,5 +50,21 @@ describe("Testing ApplicationObject Model", async () => {
         }
     
         // setImmediate(done);
+    })
+    it("testing Application object Block Parsing And Validation", async (t,done) => {
+        var genesisBlock = { "T": "00000002af000000000000000000000000000000000000000000000000000000", "created": 1624219079,
+         "miner": "dionyziz", "nonce": "0000000000000000000000000000000000000000000000000000002634878840",
+          "note": "The Economist 2021-06-20: Crypto-miners are probably to blame for the graphics-chip shortage",
+           "previd": null, "txids": [], "type": "block" };
+        
+        var genesisId = "00000000a420b7cefa2b7730243316921ed59ffe836e111ca3801f82a4f5360e";
+        var T = "00000002af000000000000000000000000000000000000000000000000000000"
+        var parsedGenesisBlock: Block ;
+        assert.doesNotThrow(() =>Block.Parse(genesisBlock, node.address))
+        parsedGenesisBlock = Block.Parse(genesisBlock, node.address);
+        assert.equal(T, parsedGenesisBlock.T, "T values must match");
+        assert.equal(genesisId, parsedGenesisBlock.GetID(), "IDS must match");
+        assert.doesNotThrow(async () => await parsedGenesisBlock.Verify());
+
     })
 })

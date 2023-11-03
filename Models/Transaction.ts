@@ -3,13 +3,17 @@ import { ApplicationObject } from "./ApplicationObject.js";
 import * as ed from "@noble/ed25519"
 import { sha512 } from "@noble/hashes/sha512";
 import { Block } from "./Block.js";
-import canonicalize from "canonicalize"
+import Sha256, {Hash, HMAC} from "fast-sha256"
+import serialize from "canonicalize"
 import { Input } from "./Input.js";
 import { Output } from "./Output.js";
 import { ApplicationObjectDB } from "../DB/ApplicationObject.db.js";
 
 
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
+
+var sha256 = Sha256.hash
+var canonicalize = serialize
 
 
 export class Transaction {
@@ -18,6 +22,7 @@ export class Transaction {
     outputs: Output[];
     coinbase: boolean;
     height?: number;
+    id?: string;
 
     constructor(outputs: Output[], inputs: Input[], coinbase?: boolean, height?: number) {
         this.inputs = inputs;
@@ -60,6 +65,13 @@ export class Transaction {
         }
         
     }
+    GetID() {
+        if (this.id === undefined){
+            var uint8 = Buffer.from(canonicalize(this.ToDict()));
+            this.id = Buffer.from(sha256(uint8)).toString("hex");    
+        }
+        return this.id;
+    }
 
     GetNoSig() {
         if (this.coinbase)
@@ -72,11 +84,11 @@ export class Transaction {
     }
 
     async Verify(appObjDB: ApplicationObjectDB): Promise<boolean> {
-        var matchingOutputs: Transaction[] = []
+        var matchingOutputs: [Transaction, number][] = []
         var nosigTx = this.GetNoSig()
 
         for(let input of this.inputs){
-            var out: ApplicationObject = (await appObjDB.FindById(input.outpoint.txid))
+            var out: ApplicationObject | null | undefined = (await appObjDB.FindById(input.outpoint.txid))
             if (! out){
                 throw new Error("Outpoint of Transaction Couldn't be found. ")
             }
@@ -85,7 +97,7 @@ export class Transaction {
             if(matchingOutputTx instanceof Block){
                 throw new Error("Object with id " + input.outpoint.txid + " is not a transaction.");
             }
-            matchingOutputs.push(matchingOutputTx);
+            matchingOutputs.push([matchingOutputTx, input.outpoint.index]);
             if(matchingOutputTx.outputs.length < input.outpoint.index){
                 throw new Error("outputs length is smaller then outpoint index " + input.outpoint.index.toString());
             }
@@ -110,12 +122,11 @@ export class Transaction {
                 throw new Error("Coinbase transaction input length is not 0, or output length is not 1");
             if (this.height && this.height < 0)
                 throw new Error("height cannot be less than 0.");
-            
             return true;
 
         }
-        var sum_inputs:number = matchingOutputs.reduce(function (prevValue, curElement) {
-            return prevValue + curElement.outputs.reduce((pv, ce) => pv + ce.value,0);
+        var sum_inputs:number = matchingOutputs.reduce(function (prev, cur) {
+            return prev + cur[0].outputs[cur[1]].value;
         },0)
         
         var sum_outputs:number = this.outputs.reduce(function(prevValue: number, curElement) {

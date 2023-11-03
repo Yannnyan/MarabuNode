@@ -10,6 +10,8 @@ export class GetObjectStrategy extends MsgStrategy {
         this.CheckValidMsg(GetObjMsg, this.msg);
         var peer = this.peer;
         container[this.address.toString()].DBConProvider.appObj.FindById(this.msg["objectid"]).then(function(obj) {
+            if(!obj)
+                throw new Error("couldn't find object");
             peer.SendObject(obj)
         })
     }
