@@ -35,7 +35,7 @@ describe("Testing Node Protocols", () => {
             "pubkey":"8dbcd2401c89c04d6e53c81c90aa0b551cc8fc47c0469217c8f5cfbae1e911f9",
             "value":50000000000}],"type":"transaction"},"type":"object"}
         
-        var obj = ApplicationObject.Parse(tx);
+        var obj = ApplicationObject.Parse(tx, node1.address);
         if(senderPeer !== undefined)
         {
             senderPeer.SendHello()

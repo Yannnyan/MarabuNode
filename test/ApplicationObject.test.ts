@@ -10,11 +10,13 @@ import { Block } from "../Models/Block.js";
 var host = "127.0.0.1"
 var port = 18018
 
-var node = new MarabuNode(host, port);
 
 
 describe("Testing ApplicationObject Model", async () => {
+    
     it("Test ApplicationObject Transaction parsing and validation", async (t, done) => {
+        var node = new MarabuNode(host, port);
+
         var coinbaseTx: any = {"object":{"height":0,"outputs":[{
             "pubkey":"8dbcd2401c89c04d6e53c81c90aa0b551cc8fc47c0469217c8f5cfbae1e911f9",
             "value":50000000000}],"type":"transaction"},"type":"object"}
@@ -25,12 +27,12 @@ describe("Testing ApplicationObject Model", async () => {
         "outputs":[{"pubkey":"8dbcd2401c89c04d6e53c81c90aa0b551cc8fc47c0469217c8f5cfbae1e911f9",
             "value":10}],"type":"transaction"},"type":"object"}
     
-        assert.doesNotThrow(() => ApplicationObject.Parse(coinbaseTx), "Parsing legal string not throws")
-        var obj: ApplicationObject = ApplicationObject.Parse(coinbaseTx);
+        assert.doesNotThrow(() => ApplicationObject.Parse(coinbaseTx, node.address), "Parsing legal string not throws");
+        var obj: ApplicationObject = ApplicationObject.Parse(coinbaseTx, node.address);
         assert.equal(serialize(coinbaseTx), obj.ToString(), "converting the object back to string must be the same")
     
-        assert.doesNotThrow(() => ApplicationObject.Parse(nextTransaction), "Parsing legal string not throws")
-        var nextTx: ApplicationObject = ApplicationObject.Parse(nextTransaction);
+        assert.doesNotThrow(() => ApplicationObject.Parse(nextTransaction, node.address), "Parsing legal string not throws")
+        var nextTx: ApplicationObject = ApplicationObject.Parse(nextTransaction, node.address);
         assert.equal(serialize(nextTransaction), nextTx.ToString(), "converting the object back to string must be the same")
         
         assert.equal(obj.GetID(),"1bb37b637d07100cd26fc063dfd4c39a7931cc88dae3417871219715a5e374af","id must match getid functionality to given id")
@@ -52,6 +54,8 @@ describe("Testing ApplicationObject Model", async () => {
         // setImmediate(done);
     })
     it("testing Application object Block Parsing And Validation", async (t,done) => {
+        var node = new MarabuNode(host, port);
+
         var genesisBlock = { "T": "00000002af000000000000000000000000000000000000000000000000000000", "created": 1624219079,
          "miner": "dionyziz", "nonce": "0000000000000000000000000000000000000000000000000000002634878840",
           "note": "The Economist 2021-06-20: Crypto-miners are probably to blame for the graphics-chip shortage",
