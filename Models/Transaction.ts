@@ -138,6 +138,16 @@ export class Transaction {
         return true;
     }
 
+    GetOutputSum(): number {
+        return this.outputs.reduce(function(prev: number, cur: Output){
+            return prev + cur.value;
+        }, 0);
+    }
+
+    CheckUTXO() : boolean {
+        return this.GetOutputSum() === 0;
+    }
+
 
     ToDict() {
         if(!this.coinbase)
