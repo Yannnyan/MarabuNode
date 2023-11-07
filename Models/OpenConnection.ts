@@ -6,11 +6,15 @@ import ErrorMsg from '../Messages/Error.json' assert { type: "json" };;
 import GetPeersMsg from '../Messages/GetPeers.json' assert { type: "json" };
 import IHaveObjMsg from '../Messages/IHaveObject.json' assert { type: "json" };
 import GetObjMsg from '../Messages/GetObject.json' assert { type: "json" };
+import ChainTipMsg from '../Messages/ChainTip.json' assert { type: "json" };
+import GetChainTipMsg from '../Messages/GetChainTip.json' assert { type: "json" };
+
 import { container } from "../Services/NodeContainerService.js";
 
 
 import {ApplicationObject} from '../Models/ApplicationObject.js';
 import { Address } from "./Address.js";
+import { Block } from "./Block.js";
 
 var canonicalize = JSON.stringify
 
@@ -88,6 +92,17 @@ export class OpenConnection {
     SendObject(appObj: ApplicationObject) {
         this.#Log(RuntimeLocal["Send Object"])
         this.SendMsg(appObj.ToString());
+    }
+
+    SendChainTip(block: Block) {
+        this.#Log(RuntimeLocal["Send Chaintip"])
+        var chaintip = ChainTipMsg;
+        chaintip.blockid = block.GetID();
+        this.SendMsg(undefined, chaintip)
+    }
+    SendGetChainTip() {
+        this.#Log(RuntimeLocal["Send GetChaintip"])
+        this.SendMsg(undefined, GetChainTipMsg);
     }
     
     

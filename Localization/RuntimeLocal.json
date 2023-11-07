@@ -16,6 +16,8 @@
     "Send GetObject": "Sending Get Object",
     "Send GetPeers": "Sending Get Peers",
     "Send IHaveObject": "Sending I Have Object",
-    "Send Object": "Sending Object"
+    "Send Object": "Sending Object",
+    "Send Chaintip": "Sending Chaintip",
+    "Send GetChaintip": "Sending GetChaintip"
 
 }

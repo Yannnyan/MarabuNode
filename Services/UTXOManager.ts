@@ -27,14 +27,17 @@ export class UTXOManager implements IUTXOSetProvider {
         }
     }
 
-    ComputeUTXOSet(block: Block) {
-        block.Verify();
+    async ComputeUTXOSet(block: Block) {
+        await block.Verify();
         for(let txid of block.txids) {
             let utxo: Transaction | undefined = this.UTXOS.find((TX) => TX.GetID() === txid);
             if (!utxo) throw new Error("Transaction is not an unspent transaction");
-            utxo.Verify(container[this.myAddress.toString()].DBConProvider.appObj);
+            await utxo.Verify(container[this.myAddress.toString()].DBConProvider.appObj);
             this.ExecuteTransaction(utxo);
         }
+    }
+    GetUtxoSet(): Transaction[] {
+        return this.UTXOS;
     }
 
 

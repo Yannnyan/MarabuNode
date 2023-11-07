@@ -1,17 +1,19 @@
 import { IPendingReqeustProvider } from "../API/Services/IPendingRequestProvider.js";
+import { Address } from "../Models/Address.js";
 import { MsgStrategy } from "../Strategies/MsgStrategies/MsgStrategy.js";
 import { RequestStrategy } from "../Strategies/RequestStrategies/RequestStrategy.js";
 
 
 export class PendingRequestManager implements IPendingReqeustProvider {
-    requests: RequestStrategy[];
-    constructor() {
+    requests: RequestStrategy<any>[];
+    myAddress: Address;
+    constructor(myAddress: Address) {
         this.requests = [];
+        this.myAddress = myAddress;
     }
 
-    AddRequest(reqeust: RequestStrategy) {
+    AddRequest(reqeust: RequestStrategy<any>) {
         this.requests.push(reqeust);
-        reqeust.HandleRequest();
     }
 
     GetMsgStrategy(msgStrategy: MsgStrategy) {

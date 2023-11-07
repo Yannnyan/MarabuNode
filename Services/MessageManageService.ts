@@ -15,6 +15,8 @@ import { PeersStrategy } from "../Strategies/MsgStrategies/PeersStrategy.js";
 import { UnknownMsgStrategy } from "../Strategies/MsgStrategies/UnknownMsgStrategy.js";
 import { Address } from "../Models/Address.js";
 import { container } from "./NodeContainerService.js";
+import { GetChainTipStrategy } from "../Strategies/MsgStrategies/GetChainTipStrategy.js";
+import { ChainTipStrategy } from "../Strategies/MsgStrategies/ChainTipStrategy.js";
 
 
 export class MessageManager implements IMessageProvider{
@@ -105,13 +107,18 @@ export class MessageManager implements IMessageProvider{
           case "getobject":
               msgStrat = stratFactory.CreateStrategy(GetObjectStrategy.name, msg);
               break;
+          case "getchaintip":
+              msgStrat = stratFactory.CreateStrategy(GetChainTipStrategy.name, msg);
+              break;
+          case "chaintip":
+              msgStrat = stratFactory.CreateStrategy(ChainTipStrategy.name, msg);
+              break;
           case "error":
               msgStrat = stratFactory.CreateStrategy(ErrorStrategy.name, msg);
               break;
           default:
             msgStrat = stratFactory.CreateStrategy(UnknownMsgStrategy.name, msg);
         }
-
         return msgStrat;
       }
     

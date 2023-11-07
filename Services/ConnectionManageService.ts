@@ -14,7 +14,7 @@ export class ConnectionManager implements IConnectionProvider{
     address: Address;
     constructor(address: Address) {
         this.address = address;
-    }   
+    }
 
     #SetUninitialized() {
         this.peerProvider = container[this.address.toString()].peerProvider;
@@ -24,40 +24,44 @@ export class ConnectionManager implements IConnectionProvider{
         return this.address.host === address.host && this.address.port === address.port;
     }
 
-    ConnectToAddress(address: Address) {
-        if( !this.peerProvider || !this.msgProvider)
+    async ConnectToAddress(address: Address): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if( !this.peerProvider || !this.msgProvider)
             this.#SetUninitialized();
-        if (! this.peerProvider || !this.msgProvider)
-            throw new Error("cannot find peer provider or msgprovider");
-        var peerProvider = this.peerProvider;
-        var msgProvider = this.msgProvider;
-        
-        // assumes the address is not one that is connected
-        container[this.address.toString()].logger.Log(RuntimeLocal["Connect"] + " " + address.toString());
-        var socket = new net.Socket();
-    
-        return socket.connect({host: address.host, port: address.port}, () => {
+            if (! this.peerProvider || !this.msgProvider)
+                throw new Error("cannot find peer provider or msgprovider");
+            var peerProvider = this.peerProvider;
+            var msgProvider = this.msgProvider;
             
-            var peer: OpenConnection = new OpenConnection(socket, true, this.address);
-            peerProvider.AddOpenConnection(peer);
-            peerProvider.AddAddress(address);
+            // assumes the address is not one that is connected
+            container[this.address.toString()].logger.Log(RuntimeLocal["Connect"] + " " + address.toString());
+            var socket = new net.Socket();
+        
+            socket.connect({host: address.host, port: address.port}, () => {
+                
+                var peer: OpenConnection = new OpenConnection(socket, true, this.address);
+                peerProvider.AddOpenConnection(peer);
+                peerProvider.AddAddress(address);
 
-            socket.on("data", (data:Buffer) => {
-                try {
-                    msgProvider.GetMessage(data, peer);
-                }
-                catch(error) {
-                    console.log(error);
-                    peer.SendError();
-                }
-            })
-            peer.SendHello();
-            // peer.SendGetPeers();
-        });
+                socket.on("data", (data:Buffer) => {
+                    try {
+                        msgProvider.GetMessage(data, peer);
+                    }
+                    catch(error) {
+                        console.log(error);
+                        peer.SendError();
+                    }
+                })
+                peer.SendHello();
+                resolve();
+                // peer.SendGetPeers();
+            });
+        })
+        
     
     }
 
-    async ListenToConnections() {
+    ListenToConnections() {
         if( !this.peerProvider || !this.msgProvider)
             this.#SetUninitialized();
         if (! this.peerProvider || !this.msgProvider)

@@ -11,10 +11,14 @@ import { IPeerProvider } from "./API/Services/IPeerProvider.js";
 import { PeerManager } from "./Services/PeerManageService.js";
 import { MessageManager } from "./Services/MessageManageService.js";
 import { ConnectionManager } from "./Services/ConnectionManageService.js";
-import { DBConnectionManager } from "./Services/DBConnectionManagerService.js";
 import { NodeContainer, container } from "./Services/NodeContainerService.js";
 import { PendingRequestManager } from "./Services/PendingRequestManager.js";
 import { IPendingReqeustProvider } from "./API/Services/IPendingRequestProvider.js";
+import { DBConnectionManager } from "./Services/DbConnectionManagerService.js";
+import { IUTXOSetProvider } from "./API/Services/IUTXOSetProvider.js";
+import { IChainProvider } from "./API/Services/IChainProvider.js";
+import { UTXOManager } from "./Services/UTXOManager.js";
+import { ChainManager } from "./Services/ChainManager.js";
 
 
 
@@ -26,6 +30,8 @@ export class MarabuNode {
     logger: MyLogger;
     pendReqProvider: IPendingReqeustProvider;
     address: Address;
+    utxoProvider: IUTXOSetProvider;
+    chainProvider: IChainProvider;
 
   constructor(host: string, port: number) {
     this.address = new Address(host, port);
@@ -34,26 +40,38 @@ export class MarabuNode {
     this.conProvider = new ConnectionManager(this.address);
     this.dbConProvider = new DBConnectionManager(this.address);
     this.logger = new MyLogger(this.address);
-    this.pendReqProvider = new PendingRequestManager();
+    this.pendReqProvider = new PendingRequestManager(this.address);
+    this.utxoProvider = new UTXOManager(this.address);
+    this.chainProvider = new ChainManager(this.address);
+
 
     container[this.address.toString()] = new NodeContainer(this.peerProvider,this.msgProvider, 
-      this.conProvider, this.dbConProvider, this.logger, this.pendReqProvider);
+      this.conProvider, this.dbConProvider, this.logger, this.pendReqProvider, this.utxoProvider, this.chainProvider);
   }
   
 
-  BootstrapDiscovery() {
-    // connect to the hard coded ips
-    for(let s of TestHardCodedIps.ips) {
-      let address = Address.CreateAddressFromString(s);
-      console.log(address);
-      if(address.host === this.address.host && address.port === this.address.port){
-        continue;
+  async BootstrapDiscovery(): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      // connect to the hard coded ips
+      for(let s of TestHardCodedIps.ips) {
+        let address = Address.CreateAddressFromString(s);
+        console.log(address);
+        if(address.host === this.address.host && address.port === this.address.port){
+          continue;
+        }
+        if(this.peerProvider.FindServer(address.host, address.port) === undefined) {
+          this.logger.Log(RuntimeLocal.Discovery);
+          await this.conProvider.ConnectToAddress(address);
+        }
       }
-      if(this.peerProvider.FindServer(address.host, address.port) === undefined) {
-        this.logger.Log(RuntimeLocal.Discovery);
-        this.conProvider.ConnectToAddress(address);
+      resolve();
+    })
+  }
+
+  BroadcastGetChainTip() {
+      for(let opencon of this.peerProvider.GetOpenConnections()){
+        opencon.SendGetChainTip();
       }
-    }
   }
 
   GossipNewTransaction(obj: ApplicationObject, senderPeer: OpenConnection) {
@@ -63,6 +81,7 @@ export class MarabuNode {
 
   async Start(){
     this.conProvider.ListenToConnections();
-    this.BootstrapDiscovery();
+    await this.BootstrapDiscovery();
+    this.BroadcastGetChainTip();
   }
 }

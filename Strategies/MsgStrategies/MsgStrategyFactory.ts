@@ -11,6 +11,8 @@ import { ErrorStrategy } from "./ErrorStrategy.js";
 import { UnknownMsgStrategy } from "./UnknownMsgStrategy.js";
 import { MsgStrategy } from "./MsgStrategy.js";
 import { Address } from "../../Models/Address.js";
+import { GetChainTipStrategy } from "./GetChainTipStrategy.js";
+import { ChainTipStrategy } from "./ChainTipStrategy.js";
 
 
 export class MsgStrategyFactory {
@@ -41,6 +43,10 @@ export class MsgStrategyFactory {
                 return new IHaveObjectStrategy(this.peer, msg, this.address);
             case GetObjectStrategy.name:
                 return new GetObjectStrategy(this.peer, msg, this.address);
+            case GetChainTipStrategy.name:
+                return new GetChainTipStrategy(this.peer, msg, this.address);
+            case ChainTipStrategy.name:
+                return new ChainTipStrategy(this.peer, msg, this.address);
             case ErrorStrategy.name:
                 return new ErrorStrategy(this.peer, msg, this.address);
             case UnknownMsgStrategy.name:

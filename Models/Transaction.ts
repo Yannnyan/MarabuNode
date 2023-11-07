@@ -89,24 +89,18 @@ export class Transaction {
 
         for(let input of this.inputs){
             var out: ApplicationObject | null | undefined = (await appObjDB.FindById(input.outpoint.txid))
-            if (! out){
-                throw new Error("Outpoint of Transaction Couldn't be found. ")
-            }
+            if (! out) throw new Error("Outpoint of Transaction Couldn't be found. ")
             var matchingOutputTx: Transaction | Block = out.object
             console.log("obj" + matchingOutputTx)
-            if(matchingOutputTx instanceof Block){
-                throw new Error("Object with id " + input.outpoint.txid + " is not a transaction.");
-            }
+            if(matchingOutputTx instanceof Block) throw new Error("Object with id " + input.outpoint.txid + " is not a transaction.");
             matchingOutputs.push([matchingOutputTx, input.outpoint.index]);
-            if(matchingOutputTx.outputs.length < input.outpoint.index){
-                throw new Error("outputs length is smaller then outpoint index " + input.outpoint.index.toString());
-            }
+            if(matchingOutputTx.outputs.length < input.outpoint.index) throw new Error("outputs length is smaller then outpoint index " + input.outpoint.index.toString());
             var uint8Sig = Uint8Array.from(Buffer.from(input.sig, "hex")) // conv hex to uint8
             var uint8Pubkey = Uint8Array.from(Buffer.from(matchingOutputTx.outputs[input.outpoint.index]["pubkey"], 'hex'))  // conv hex to uint8
             var uint8Msg = (Buffer.from(canonicalize(nosigTx))) // conv hex to uint8
-            if(!ed.verify(uint8Sig,uint8Msg,uint8Pubkey)) {
-                throw new Error("ed verification didn't check out.");
-            }
+            if(!ed.verify(uint8Sig,uint8Msg,uint8Pubkey)) throw new Error("ed verification didn't check out.");
+            var sameOp = this.inputs.filter((inp) => inp.outpoint.index === input.outpoint.index && inp.outpoint.txid === input.outpoint.txid);
+            if(sameOp.length >=2) throw new Error("transaction contains two matching outputs");
         }
         for (let output of this.outputs) {
             if(output.pubkey.length !== 64) { // check valid

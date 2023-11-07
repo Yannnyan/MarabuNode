@@ -7,7 +7,7 @@ export interface IConnectionProvider {
      * @param address 
      * @returns 
      */
-    ConnectToAddress: (address: Address) => void;
+    ConnectToAddress(address: Address): Promise<void>;
     
     /**
      * 

@@ -46,8 +46,8 @@ export class ApplicationObject {
         }
     }
 
-    async Verify(appObj: ApplicationObjectDB) {
-        await this.object.Verify(appObj);
+    async Verify(appObj: ApplicationObjectDB): Promise<boolean> {
+        return await this.object.Verify(appObj);
     }
 
     ToDict() {

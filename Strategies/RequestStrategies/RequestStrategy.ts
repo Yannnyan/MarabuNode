@@ -1,9 +1,9 @@
 import { MsgStrategy } from "../MsgStrategies/MsgStrategy.js";
 
 
-export abstract class RequestStrategy {
+export abstract class RequestStrategy<T> {
     
-    abstract OnFullfilled(): void;
+    abstract OnFullfilled(): T;
     /**
      * Must defined when the request is fullfilled
      */
