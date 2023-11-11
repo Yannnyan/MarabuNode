@@ -4,23 +4,32 @@ import { Block } from "../Models/Block.js";
 import { Transaction } from "../Models/Transaction.js";
 import { GetObjectsRequest } from "../Strategies/RequestStrategies/GetObjectsRequest.js";
 import { container } from "./NodeContainerService.js";
-import Events from "../Events/events.json"
+import Events from "../Events/Events.json" assert {type: "json"};
+import { ApplicationObjectDB } from "../DB/ApplicationObject.db.js";
 
 
 export class ChainManager implements IChainProvider{
     longestChainTip?: Block;
     longestChainHeight: number;
-    myAddress: Address
+    myAddress: Address;
 
     constructor(myAddress: Address) {
         this.longestChainHeight = 0;
         this.myAddress = myAddress;
     }
 
+    async setup() {
+        var appObj = container[this.myAddress.toString()].DBConProvider.appObj;
+         
+        var genesis = (await appObj.FindGenesis());
+        if(genesis)
+            this.longestChainTip =  <Block>genesis.object;
+
+    }
+
 
     async UpdateTip(blockid: string) {
         await this.#TakeBlockId(blockid);
-        container[this.myAddress.toString()].eventEmitter.emit(Events["CHAINTIP_UPDATE"]);
     }
 
     async #TakeBlockId(blockid: string) {
@@ -62,6 +71,7 @@ export class ChainManager implements IChainProvider{
         return this.longestChainHeight;
     }
     
+
 }
 
 

@@ -2,45 +2,49 @@ import { Address } from "../Models/Address.js";
 import { Block } from "../Models/Block.js";
 import { Transaction } from "../Models/Transaction.js";
 import { container } from "./NodeContainerService.js";
-import EVENTS from '../Events/events.json' assert { type: "json" };
+import EVENTS from '../Events/Events.json' assert { type: "json" };
+import {Mutex} from "async-mutex";
+import { IMempoolProvider } from "../API/Services/IMempoolProvider.js";
 
 
 
-export class MempoolManager {
-    txs: Map<string, Transaction>
+export class MempoolManager implements IMempoolProvider {
+    txs: Set<string>
     myAddress: Address;
+    mutex: Mutex;
 
     constructor(myAddress: Address) {
-        this.txs = new Map();
         this.myAddress = myAddress;
-        // var db = container[myAddress.toString()].DBConProvider.appObj;
-        // container[this.myAddress.toString()].eventEmitter.addListener(EVENTS["CHAINTIP_UPDATE"], async () => {
-        //     var tip = container[this.myAddress.toString()].chainProvider.GetLongestChainTip();
-        //     if(!tip) throw new Error("undefined tip");
-        //     for(let txid of tip?.txids) {
-        //         var trans = await db.FindById(txid);
-        //         if(!trans) throw new Error("trans cant be found");
-        //         if(trans.object instanceof Block) throw new Error("found block instead of transaction");
-        //         this.SetTransaction(trans.object);
-        //     }
-        // })
+        this.txs = new Set();
+        this.mutex = new Mutex();
     }
 
     /**
      * Puts the transaction in the map of pending transactions.
      * @param tx Assumes tx is verified 
      */
-    SetTransaction(tx: Transaction) {
-        if(!this.txs.get(tx.GetID()))  this.txs.set(tx.GetID(), tx);
+    async SetTransaction(tx: string): Promise<void> {
+        const release = await this.mutex.acquire();
+        if(!this.txs.has(tx))  this.txs.add(tx);
+        release();
     }
     /**
      * 
      * @param block Assumes block is verified
      */
-    ApplyBlock(block: Block) { 
+    async ApplyBlock(block: Block): Promise<void> {
+        const release = await this.mutex.acquire(); 
         for(let tx of block.txids) {
             this.txs.delete(tx);
         }
+        release();
+    }
+
+    async GetTxs() : Promise<Set<string>> {
+        const release = await this.mutex.acquire();
+        var txs = this.txs;
+        release();
+        return txs;
     }
 }
 

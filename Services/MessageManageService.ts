@@ -17,7 +17,7 @@ import { Address } from "../Models/Address.js";
 import { container } from "./NodeContainerService.js";
 import { GetChainTipStrategy } from "../Strategies/MsgStrategies/GetChainTipStrategy.js";
 import { ChainTipStrategy } from "../Strategies/MsgStrategies/ChainTipStrategy.js";
-
+import EVENTS from '../Events/Events.json';
 
 export class MessageManager implements IMessageProvider{
     peerProvider?: IPeerProvider;
@@ -114,7 +114,7 @@ export class MessageManager implements IMessageProvider{
               msgStrat = stratFactory.CreateStrategy(ChainTipStrategy.name, msg);
               break;
           case "error":
-              msgStrat = stratFactory.CreateStrategy(ErrorStrategy.name, msg);
+              // msgStrat = stratFactory.CreateStrategy(ErrorStrategy.name, msg);
               break;
           default:
             msgStrat = stratFactory.CreateStrategy(UnknownMsgStrategy.name, msg);
@@ -147,7 +147,17 @@ export class MessageManager implements IMessageProvider{
         container[this.address.toString()].logger.Log(RuntimeLocal.Data);
         var pendReqProvider = container[this.address.toString()].pendingRequestProvider
         var msgStrats = this.ParseMessages(this.DivideMessage(msg.toString(this.encoding)), peer)
-        msgStrats?.forEach((strat) => strat.HandleMessage());
+        msgStrats?.forEach(function(strat) {
+            try{  
+              strat.HandleMessage()
+            }
+            catch(err) {
+              strat.peer.SendError();
+            }
+
+          })
+        
+        
         msgStrats?.forEach((strat) => pendReqProvider.GetMsgStrategy(strat));
       }
 }

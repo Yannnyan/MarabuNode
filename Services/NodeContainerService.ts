@@ -7,6 +7,8 @@ import { MyLogger } from "../Localization/RuntimeLocal.js";
 import { EventEmitter } from "events";
 import { IUTXOSetProvider } from "../API/Services/IUTXOSetProvider.js";
 import { IChainProvider } from "../API/Services/IChainProvider.js";
+import { IMempoolProvider } from "../API/Services/IMempoolProvider.js";
+import { MarabuNode } from "../MarabuNode.js";
 
 export var container: {[address: string] : NodeContainer} = {};
 
@@ -21,20 +23,27 @@ export class NodeContainer{
     eventEmitter: EventEmitter;
     utxoSetProvider: IUTXOSetProvider;
     chainProvider: IChainProvider;
+    mempoolProvider: IMempoolProvider;
+    marabuNode: MarabuNode;
 
 
     constructor(peerProvider: IPeerProvider, msgProvider:IMessageProvider, conProvider: IConnectionProvider,
             DBConProvider: IDBConnectionProvider, logger: MyLogger, pendingRequestProvider: IPendingReqeustProvider,
-            utxoSetProvider: IUTXOSetProvider, chainProvider: IChainProvider) {
+            utxoSetProvider: IUTXOSetProvider, chainProvider: IChainProvider, mempoolProvider: IMempoolProvider,
+            marabuNode: MarabuNode, eventEmitter: EventEmitter) {
         this.peerProvider = peerProvider;
         this.msgProvider = msgProvider;
         this.conProvider = conProvider;
         this.DBConProvider = DBConProvider;
         this.logger = logger;
         this.pendingRequestProvider = pendingRequestProvider;
-        this.eventEmitter = new EventEmitter();
         this.utxoSetProvider = utxoSetProvider;
         this.chainProvider = chainProvider;
+        this.mempoolProvider = mempoolProvider;
+        this.marabuNode = marabuNode;
+        this.eventEmitter = eventEmitter;
+
+
     }
 }
 

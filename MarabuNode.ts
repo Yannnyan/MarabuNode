@@ -19,6 +19,13 @@ import { IUTXOSetProvider } from "./API/Services/IUTXOSetProvider.js";
 import { IChainProvider } from "./API/Services/IChainProvider.js";
 import { UTXOManager } from "./Services/UTXOManager.js";
 import { ChainManager } from "./Services/ChainManager.js";
+import { MempoolManager } from "./Services/MempoolManager.js";
+import { IMempoolProvider } from "./API/Services/IMempoolProvider.js";
+import { Block } from "./Models/Block.js";
+import { MiningManager } from "./Services/MiningManager.js";
+import { ClassicMiningStrategy } from "./Strategies/MiningStrategy/ClassicMiningStrategy.js";
+import { EventEmitter } from "events";
+import EVENTS from './Events/Events.json' assert {type: "json"}
 
 
 
@@ -31,9 +38,13 @@ export class MarabuNode {
     pendReqProvider: IPendingReqeustProvider;
     address: Address;
     utxoProvider: IUTXOSetProvider;
+    mempoolProvider: IMempoolProvider;
+    eventEmitter: EventEmitter;
     chainProvider: IChainProvider;
+    miningManager?: MiningManager;
 
   constructor(host: string, port: number) {
+    this.eventEmitter = new EventEmitter();
     this.address = new Address(host, port);
     this.peerProvider = new PeerManager(this.address);
     this.msgProvider = new MessageManager(this.address);
@@ -42,11 +53,17 @@ export class MarabuNode {
     this.logger = new MyLogger(this.address);
     this.pendReqProvider = new PendingRequestManager(this.address);
     this.utxoProvider = new UTXOManager(this.address);
+    this.mempoolProvider = new MempoolManager(this.address);
     this.chainProvider = new ChainManager(this.address);
-
-
+    
     container[this.address.toString()] = new NodeContainer(this.peerProvider,this.msgProvider, 
-      this.conProvider, this.dbConProvider, this.logger, this.pendReqProvider, this.utxoProvider, this.chainProvider);
+      this.conProvider, this.dbConProvider, this.logger, this.pendReqProvider, this.utxoProvider,
+       this.chainProvider, this.mempoolProvider, this, this.eventEmitter);
+
+    this.eventEmitter.addListener(EVENTS.CHAINTIP_UPDATE, async (blockid: string) => {
+      await this.chainProvider.UpdateTip(blockid);
+      this.miningManager = new MiningManager(this.address);
+    })
   }
   
 
@@ -74,6 +91,13 @@ export class MarabuNode {
       }
   }
 
+  BroadcastNewBlock(block: Block) {
+    
+    for(let opencon of this.peerProvider.GetOpenConnections()) {
+      opencon.SendObject(new ApplicationObject(block));
+    }
+  }
+
   GossipNewTransaction(obj: ApplicationObject, senderPeer: OpenConnection) {
     this.msgProvider.GetMessage(Buffer.from(obj.ToString() + '\n' , "utf-8"), senderPeer);
   }
@@ -82,6 +106,7 @@ export class MarabuNode {
   async Start(){
     this.conProvider.ListenToConnections();
     await this.BootstrapDiscovery();
+    await this.chainProvider.setup();
     this.BroadcastGetChainTip();
   }
 }

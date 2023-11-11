@@ -18,4 +18,3 @@ export class HandShakeStrategy extends MsgStrategy{
         this.peer.SendGetPeers();
     }
 }
-  

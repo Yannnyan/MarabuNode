@@ -60,9 +60,15 @@ export class OpenConnection {
         this.SendMsg(undefined,HelloMsg)
     }
 
-    SendError() {
+    SendError(err?: string) {
         this.#Log(RuntimeLocal["Send Error"])
-        this.SendMsg(undefined, ErrorMsg)
+        if(!err)
+            this.SendMsg(undefined, ErrorMsg)
+        else
+            this.SendMsg(undefined, {
+                "type": "error",
+                "error": err
+            });
     }
 
     SendPeers(peers: any) {

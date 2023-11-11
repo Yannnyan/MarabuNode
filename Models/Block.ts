@@ -7,6 +7,8 @@ import { Address } from "./Address.js";
 import { GetObjectsRequest } from "../Strategies/RequestStrategies/GetObjectsRequest.js";
 import { Transaction } from "./Transaction.js";
 import { Input } from "./Input.js";
+import BLOCK_CONFIG from '../config/block.config.json' assert {type: "json"}
+
 
 
 var sha256 = Sha256.hash
@@ -22,8 +24,6 @@ var blockDict = {"type": String,
 "miner": String,
 "note": String}
 
-var target = "00000002af000000000000000000000000000000000000000000000000000000";
-var BLOCKREWARD = 50 * 1e+12
 
 export class Block {
     type= "block"
@@ -103,8 +103,8 @@ export class Block {
         var idValue = bigInt(this.GetID(), 16)
         var t = bigInt(this.T, 16);
         // check valid target
-        if (this.T !== target) throw new Error("T does not equal target");
-        if (idValue >= t) throw new Error("Proof of work is not valid, block ---> `id >= target`");
+        if (this.T !== BLOCK_CONFIG.target) throw new Error("T does not equal target");
+        if (idValue < t) throw new Error("Proof of work is not valid, block ---> `id >= target`");
     }
 
     async #CheckCoinbase(coinbaseTx: Transaction, allTransactions: Transaction[], nonCoinbaseTxs: Transaction[]) {
@@ -139,7 +139,7 @@ export class Block {
             },0);
         },0);
         let fees = input_sum - output_sum; // fees are positive here
-        if(fees + BLOCKREWARD < coinbaseTx.outputs[0].value) throw new Error("Coinbase transaction reward is more than BLOCKREWARD + fees");   
+        if(fees + BLOCK_CONFIG.BLOCK_REWARD < coinbaseTx.outputs[0].value) throw new Error("Coinbase transaction reward is more than BLOCKREWARD + fees");   
     }
 
     async #GetAllPreviousBlocks() {
@@ -161,7 +161,7 @@ export class Block {
 
     #CheckMinerNote() {
         var reg = /^[\x00-\x7F]*$/;
-        if(!(this.note.length > 128 || this.miner.length > 128)) throw new Error("INVALID_FORMAT"); // miner or note length is mor ethan 128 bytes long
+        if((this.note.length > 128 || this.miner.length > 128)) throw new Error("INVALID_FORMAT"); // miner or note length is mor ethan 128 bytes long
         if(!(reg.test(this.note) || reg.test(this.miner))) throw new Error("INVALID_FORMAT"); //miner or note is not ascii printable
 
     }
@@ -177,7 +177,9 @@ export class Block {
         allTransactions.forEach(async (transaction) => {
             if (!(await transaction.Verify(appObj))) throw new Error("Transaction " + transaction.GetID() +" is not verified");
         });
-        // check that the block has only one coinbase transaction  
+        if(this.previd === null && this.txids.length > 0) throw new Error("Not valid genesis");
+        if(this.previd === null) return true;
+        // check that the block has only one coinbase transaction
         var coinbaseTxs: Transaction[] = allTransactions.filter((tx) => tx.isCoinbase())
         var nonCoinbaseTxs: Transaction[] = allTransactions.filter((tx) => !tx.isCoinbase())
         if(coinbaseTxs.length > 1) throw new Error("Block contains more than one coinbase transactions.");

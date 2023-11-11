@@ -33,4 +33,11 @@ export class ApplicationObjectDB{
         return ApplicationObject.Parse(obj._doc, this.myAddress);
     }
 
+    async FindGenesis(): Promise<ApplicationObject | null | undefined> {
+        var obj = await this.ObjModel.findOne({"object.previd": null});
+        if(!obj)
+            return obj;
+        return ApplicationObject.Parse(obj._doc, this.myAddress);
+    } 
+
 }

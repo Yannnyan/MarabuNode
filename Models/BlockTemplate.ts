@@ -1,38 +1,29 @@
-import { container } from "../Services/NodeContainerService.js";
 import { Address } from "./Address.js";
 import { Block } from "./Block.js";
 
 
 export class BlockTemplate {
-    created: number;
     T: string;
     miner: string;
     note: string;
     myAddress: Address;
     maxTxs: number;
+    pickedTxids: string[];
+    previd: string;
 
-    constructor(myAddress:Address, note:string, miner: string, created: number, T: string, maxTxs: number) {
-        this.created = created;
+
+    constructor(myAddress:Address, note:string, miner: string, T: string, maxTxs: number, previd: string) {
         this.miner = miner;
         this.note = note;
         this.maxTxs = maxTxs;
         this.T = T;
         this.myAddress = myAddress;
+        this.pickedTxids = [];
+        this.previd = previd;
     }
 
-    CreateBlock(nonce: string, previd: string) : Block {
-        var txids: string[] = container[this.myAddress.toString()].utxoSetProvider.GetUtxoSet().map((utxo) => utxo.GetID());
-        var pickedTxids = txids.splice(0,this.maxTxs); 
-        return new Block(pickedTxids, nonce, previd, this.created, this.T, this.miner,this.note, this.myAddress)
+    async CreateBlock(nonce: string, previd: string, txids: Set<string>) : Promise<Block> {
+        this.pickedTxids = [...txids].slice(0,this.maxTxs);
+        return new Block(this.pickedTxids, nonce, previd, Date.now(), this.T, this.miner,this.note, this.myAddress)
     }
 }
-
-
-
-
-
-
-
-
-
-

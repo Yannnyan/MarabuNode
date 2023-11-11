@@ -1,24 +1,34 @@
+import { randomBytes } from "crypto";
 import { Block } from "../../Models/Block.js";
 import { container } from "../../Services/NodeContainerService.js";
 import { MiningStrategy } from "./MiningStrategy.js";
+import { Address } from "../../Models/Address.js";
+import { BlockTemplate } from "../../Models/BlockTemplate.js";
+
+
 
 export class ClassicMiningStrategy extends MiningStrategy{
+    txids: Set<string>;
+    constructor(address: Address, blocktemplate: BlockTemplate, txids: Set<string>) {
+        super(address,blocktemplate);
+        this.txids = txids;
+    }
+
+    UpdateTxids(txids: Set<string>) {
+        this.txids = txids;
+    }
     async Mine(): Promise<Block> {
-        return new Promise((resolve, reject) => {
-            var nonce: BigInt | undefined = undefined;
-            var chainTip: Block | undefined;
+            var nonce: string;
             var previd: string | undefined;
             var b: Block;
             do {
-                chainTip = container[this.myAddress.toString()].chainProvider.GetLongestChainTip();
-                previd = chainTip ? chainTip.GetID() : undefined;
-                nonce = nonce ? BigInt(("0x" + nonce) + BigInt("0x1")) : BigInt("0x0"); 
+                console.log(container);
+                previd = this.blockTemplate.previd;
+                nonce = randomBytes(32).toString("hex");
                 if(!previd) throw (new Error("previd is not found"));
-                b = this.blockTemplate.CreateBlock(nonce.toString(16),previd);
+                b = await this.blockTemplate.CreateBlock(nonce,previd, this.txids);
             }
             while(b.GetID() > this.blockTemplate.T);
-            resolve(b);
-        });
+            return b;
     }
-    
 }
